@@ -48,7 +48,7 @@ class TicketController extends Controller
                 'category' => $ticket->category,
                 'created' => $ticket->created_at ? $ticket->created_at->format('Y-m-d') : '',
                 'user' => $ticket->username,
-                'assignedTo' => '', // Add if you have this field
+                'assignedTo' => '',
             ],
             'messages' => $messages,
         ]);
@@ -63,7 +63,8 @@ class TicketController extends Controller
         $ticket = Ticket::findOrFail($id);
 
         $msg = $ticket->messages()->create([
-            'sender' => 'admin', // Or use auth()->user()->name if you want
+            // 'sender' => 'admin', // Or use auth()->user()->name if you want
+            'sender' => auth()->user()->name,
             'message' => $request->message,
         ]);
 
