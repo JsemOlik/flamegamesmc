@@ -12,7 +12,7 @@
                             Správa a řešení podporních požadavků od hráčů
                         </p>
                     </div>
-                    <button @click="showCreateModal = true"
+                    <button type="button" @click="showCreateModal = true"
                         class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
                         Vytvořit Ticket
                     </button>
@@ -131,14 +131,6 @@
                                 <option value="other">Ostatní</option>
                             </select>
                         </div>
-
-                        <div class="flex-1">
-                            <label
-                                class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Hledat</label>
-                            <input v-model="searchTerm" type="text"
-                                placeholder="Hledat podle předmětu nebo uživatele..."
-                                class="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white px-3 py-2">
-                        </div>
                     </div>
                 </div>
 
@@ -190,7 +182,8 @@
                                         {{ ticket.subject }}</td>
                                     <td
                                         class="px-4 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-white hidden md:table-cell">
-                                        {{ ticket.user }}</td>
+                                        {{ ticket.username }}
+                                    </td>
                                     <td class="px-4 py-4 whitespace-nowrap">
                                         <span :class="getStatusClass(ticket.status)"
                                             class="px-2 py-1 text-xs font-medium rounded-full">
@@ -331,6 +324,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import { ref, computed, onMounted, defineProps } from 'vue';
+import axios from 'axios';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -345,13 +339,14 @@ const searchTerm = ref('');
 
 const newTicket = ref({
     subject: '',
-    user: '',
+    // user: '',
     priority: 'medium',
     category: 'technical',
     description: ''
 });
 
-const props = defineProps<{ tickets: any[] }>();
+const props = defineProps<{ tickets: any[], userRole: string }>();
+const userRole = props.userRole;
 const tickets = ref(props.tickets ?? []);
 
 const filteredTickets = computed(() => {
@@ -361,7 +356,7 @@ const filteredTickets = computed(() => {
         const matchesCategory = !selectedCategory.value || ticket.category === selectedCategory.value;
         const matchesSearch = !searchTerm.value ||
             ticket.subject.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-            ticket.user.toLowerCase().includes(searchTerm.value.toLowerCase());
+            ticket.username.toLowerCase().includes(searchTerm.value.toLowerCase());
 
         return matchesStatus && matchesPriority && matchesCategory && matchesSearch;
     });
@@ -432,26 +427,25 @@ const editTicket = (ticket: any) => {
     console.log('Editing ticket:', ticket);
 };
 
-const createTicket = () => {
-    // Implement create ticket logic
-    const ticket = {
-        id: tickets.value.length + 1,
-        ...newTicket.value,
-        status: 'open',
-        created: new Date().toISOString().split('T')[0]
-    };
-
-    tickets.value.unshift(ticket);
-    showCreateModal.value = false;
-
-    // Reset form
-    newTicket.value = {
-        subject: '',
-        user: '',
-        priority: 'medium',
-        category: 'technical',
-        description: ''
-    };
+const createTicket = async () => {
+    try {
+        await axios.post('/tickets', {
+            subject: newTicket.value.subject,
+            priority: newTicket.value.priority,
+            category: newTicket.value.category,
+            description: newTicket.value.description,
+        });
+        showCreateModal.value = false;
+        newTicket.value = {
+            subject: '',
+            priority: 'medium',
+            category: 'technical',
+            description: ''
+        };
+        window.location.reload();
+    } catch (e) {
+        alert('Nepodařilo se vytvořit ticket.');
+    }
 };
 
 onMounted(() => {

@@ -17,15 +17,43 @@ class TicketController extends Controller
 
     public function index()
     {
-        // Eager-load messages if you want them too
-        $tickets = Ticket::with('messages')->orderByDesc('id')->get();
+        $user = auth()->user();
 
-        return Inertia::render('Tickets', ['tickets' => $tickets]);
+        if ($user->role === 'admin') {
+            $tickets = Ticket::orderByDesc('id')->get();
+        } else {
+            $tickets = Ticket::where('username', $user->name)
+                ->orderByDesc('id')
+                ->get();
+        }
+
+        // Map tickets to include username and created fields
+        $tickets = $tickets->map(function ($ticket) {
+            return [
+                'id' => $ticket->id,
+                'subject' => $ticket->subject,
+                'username' => $ticket->username,
+                'priority' => $ticket->priority,
+                'category' => $ticket->category,
+                'status' => $ticket->status,
+                'created' => $ticket->created_at->format('Y-m-d'),
+            ];
+        });
+
+        return Inertia::render('Tickets', [
+            'tickets' => $tickets,
+            'userRole' => $user->role,
+        ]);
     }
 
     public function show($id)
     {
-        $ticket = \App\Models\Ticket::with('messages')->findOrFail($id);
+        $user = auth()->user();
+        $ticket = Ticket::with('messages')->findOrFail($id);
+
+        if ($user->role !== 'admin' && $ticket->username !== $user->name) {
+            abort(403, 'Unauthorized');
+        }
 
         // Format messages for the frontend
         $messages = $ticket->messages->map(function ($msg) use ($ticket) {
@@ -42,12 +70,11 @@ class TicketController extends Controller
             'id' => $ticket->id,
             'ticket' => [
                 'id' => $ticket->id,
+                'username' => $ticket->username,
                 'subject' => $ticket->subject,
-                'status' => $ticket->status,
                 'priority' => $ticket->priority,
                 'category' => $ticket->category,
-                'created' => $ticket->created_at ? $ticket->created_at->format('Y-m-d') : '',
-                'user' => $ticket->username,
+                'status' => $ticket->status,
                 'assignedTo' => '',
             ],
             'messages' => $messages,
@@ -63,8 +90,7 @@ class TicketController extends Controller
         $ticket = Ticket::findOrFail($id);
 
         $msg = $ticket->messages()->create([
-            // 'sender' => 'admin', // Or use auth()->user()->name if you want
-            'sender' => auth()->user()->name,
+            'sender' => auth()->user()->role === 'admin' ? 'admin' : auth()->user()->name,
             'message' => $request->message,
         ]);
 
@@ -82,5 +108,33 @@ class TicketController extends Controller
             'isAdmin' => strtolower($msg->sender) === 'admin',
             'status' => $ticket->status,
         ]);
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'subject' => 'required|string|max:255',
+            'priority' => 'required|in:low,medium,high,urgent',
+            'category' => 'required|in:technical,gameplay,player_report,other',
+            'description' => 'required|string',
+        ]);
+
+        $user = auth()->user();
+
+        $ticket = Ticket::create([
+            'username' => $user->name,
+            'subject' => $request->subject,
+            'priority' => $request->priority,
+            'category' => $request->category,
+            'status' => 'open',
+        ]);
+
+        // Optionally, create the first message as the ticket description
+        $ticket->messages()->create([
+            'sender' => $user->name,
+            'message' => $request->description,
+        ]);
+
+        return redirect()->route('tickets.index')->with('success', 'Ticket vytvořen!');
     }
 }
