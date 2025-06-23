@@ -10,14 +10,19 @@ import SettingsLayout from '@/layouts/settings/Layout.vue';
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
-        title: 'Appearance settings',
-        href: '/settings/appearance',
+        title: 'Nastavení',
+        href: '/settings/',
+    },
+    {
+        title: 'Vzhled',
+        href: '/appearance/',
     },
 ];
 </script>
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbItems">
+
         <Head title="Appearance settings" />
 
         <SettingsLayout>

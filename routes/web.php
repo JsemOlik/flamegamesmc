@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\ServerStatusController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -26,6 +28,12 @@ Route::get('/status', function () {
 Route::get('/others', function () {
     return Inertia::render('Others');
 })->middleware(['auth', 'verified'])->name('others');
+
+Route::get('/api/servers/status', [ServerStatusController::class, 'index']);
+Route::post('/api/servers/{id}/zapnout', [ServerControlController::class, 'start']);
+Route::post('/api/servers/{id}/vypnout', [ServerControlController::class, 'stop']);
+Route::post('/api/servers/{id}/restartovat', [ServerControlController::class, 'restart']);
+
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
