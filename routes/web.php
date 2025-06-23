@@ -11,5 +11,21 @@ Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::get('/tickets', function () {
+    return Inertia::render('Tickets');
+})->middleware(['auth', 'verified'])->name('tickets');
+
+Route::get('/users', function () {
+    return Inertia::render('Users');
+})->middleware(['auth', 'verified'])->name('users');
+
+Route::get('/status', function () {
+    return Inertia::render('Status');
+})->middleware(['auth', 'verified'])->name('status');
+
+Route::get('/others', function () {
+    return Inertia::render('Others');
+})->middleware(['auth', 'verified'])->name('others');
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
