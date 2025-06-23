@@ -1,8 +1,12 @@
 <?php
 
 use App\Http\Controllers\ServerStatusController;
+use App\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+use App\Models\Ticket;
+
 
 
 Route::get('/', function () {
@@ -13,9 +17,16 @@ Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/tickets', function () {
-    return Inertia::render('Tickets');
-})->middleware(['auth', 'verified'])->name('tickets');
+// Route::get('/tickets', function () {
+//     return Inertia::render('Tickets');
+// })->middleware(['auth', 'verified'])->name('tickets');
+
+Route::get('/tickets/{id}', [TicketController::class, 'show'])
+    ->middleware(['auth', 'verified'])
+    ->name('tickets.reply');
+
+Route::post('/tickets/{id}/reply', [TicketController::class, 'reply'])
+    ->middleware(['auth', 'verified']);
 
 Route::get('/users', function () {
     return Inertia::render('Users');
@@ -28,6 +39,35 @@ Route::get('/status', function () {
 Route::get('/others', function () {
     return Inertia::render('Others');
 })->middleware(['auth', 'verified'])->name('others');
+
+
+Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
+
+
+Route::get('/seed-tickets', function () {
+    DB::connection('tickets')->transaction(function () {
+        $ticket = Ticket::create([
+            'username' => 'Steve',
+            'subject' => 'Test ticket',
+            'priority' => 'high',
+            'category' => 'technical',
+            'status' => 'open',
+        ]);
+
+        $ticket->messages()->createMany([
+            [
+                'sender' => 'Steve',
+                'message' => 'My server is laggy.',
+            ],
+            [
+                'sender' => 'admin',
+                'message' => 'We are looking into it.',
+            ],
+        ]);
+    });
+
+    return 'Tickets seeded!';
+});
 
 Route::get('/api/servers/status', [ServerStatusController::class, 'index']);
 Route::post('/api/servers/{id}/zapnout', [ServerControlController::class, 'start']);

@@ -1,178 +1,460 @@
-<script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard' },
-];
-
-// Dummy data
-const networkStats = {
-    totalServers: 5,
-    onlineServers: 4,
-    totalPlayers: 87,
-    peakPlayers: 120,
-};
-
-const nodes = [
-    { name: 'Proxy-1', online: true, players: 32, tps: 19.8, ram: '2.1GB/4GB' },
-    { name: 'Lobby-1', online: true, players: 15, tps: 20.0, ram: '1.2GB/2GB' },
-    { name: 'Survival-1', online: true, players: 28, tps: 19.7, ram: '3.5GB/8GB' },
-    { name: 'Minigames-1', online: false, players: 0, tps: 0, ram: '0GB/4GB' },
-    { name: 'Skyblock-1', online: true, players: 12, tps: 19.9, ram: '2.8GB/4GB' },
-];
-
-const openTickets = [
-    { id: 1, subject: 'Griefing in spawn', status: 'Open', created: '2025-06-22', user: 'Steve' },
-    { id: 2, subject: 'Can’t connect to server', status: 'Open', created: '2025-06-21', user: 'Alex' },
-    { id: 3, subject: 'Lag on Skyblock', status: 'Open', created: '2025-06-20', user: 'Herobrine' },
-];
-
-const recentLogs = [
-    { time: '12:01', message: '[INFO] Player Steve joined Survival-1' },
-    { time: '12:03', message: '[WARN] Lag detected on Skyblock-1' },
-    { time: '12:05', message: '[INFO] Player Alex left Lobby-1' },
-    { time: '12:06', message: '[ADMIN] /restart Minigames-1 by Admin' },
-];
-
-const recentPlayers = [
-    { name: 'Steve', action: 'joined', server: 'Survival-1', time: '12:01' },
-    { name: 'Alex', action: 'left', server: 'Lobby-1', time: '12:05' },
-    { name: 'Herobrine', action: 'joined', server: 'Skyblock-1', time: '12:10' },
-];
-
-const adminActions = [
-    { admin: 'Admin', action: 'Restarted Minigames-1', time: '12:06' },
-    { admin: 'Mod', action: 'Banned Notch', time: '11:50' },
-];
-</script>
-
 <template>
 
-    <Head title="Dashboard" />
+    <Head title="Tickety" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex flex-col gap-8 p-4 min-h-screen">
-            <!-- Network Overview -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="rounded-xl border-2 border-orange-500 p-4 shadow-lg flex flex-col items-center">
-                    <span class="text-3xl font-bold text-orange-500">{{ networkStats.totalServers }}</span>
-                    <span class="uppercase text-xs tracking-widest text-orange-500">Total Servers</span>
-                </div>
-                <div class="rounded-xl border-2 border-orange-500 p-4 shadow-lg flex flex-col items-center">
-                    <span class="text-3xl font-bold text-orange-500">{{ networkStats.onlineServers }}</span>
-                    <span class="uppercase text-xs tracking-widest text-orange-500">Online Servers</span>
-                </div>
-                <div class="rounded-xl border-2 border-orange-500 p-4 shadow-lg flex flex-col items-center">
-                    <span class="text-3xl font-bold text-orange-500">{{ networkStats.totalPlayers }}</span>
-                    <span class="uppercase text-xs tracking-widest text-orange-500">Players Online</span>
-                </div>
-                <div class="rounded-xl border-2 border-orange-500 p-4 shadow-lg flex flex-col items-center">
-                    <span class="text-3xl font-bold text-orange-500">{{ networkStats.peakPlayers }}</span>
-                    <span class="uppercase text-xs tracking-widest text-orange-500">Peak Today</span>
-                </div>
-            </div>
-
-            <!-- Nodes Status -->
-            <div>
-                <h2 class="font-bold text-xl mb-2 text-orange-500">Node Status</h2>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm border border-orange-200 rounded-xl">
-                        <thead>
-                            <tr class="bg-orange-100 text-orange-700">
-                                <th class="p-2">Node</th>
-                                <th class="p-2">Status</th>
-                                <th class="p-2">Players</th>
-                                <th class="p-2">TPS</th>
-                                <th class="p-2">RAM</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="node in nodes" :key="node.name" :class="node.online ? '' : 'bg-orange-50'">
-                                <td class="p-2 font-semibold">{{ node.name }}</td>
-                                <td class="p-2">
-                                    <span :class="node.online ? 'text-green-600 font-bold' : 'text-red-500 font-bold'">
-                                        ● {{ node.online ? 'Online' : 'Offline' }}
-                                    </span>
-                                </td>
-                                <td class="p-2">{{ node.players }}</td>
-                                <td class="p-2">{{ node.tps }}</td>
-                                <td class="p-2">{{ node.ram }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div>
-                <h2 class="font-bold text-xl mb-2 text-orange-500">Quick Actions</h2>
-                <div class="flex gap-4 flex-wrap">
-                    <button
-                        class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded shadow transition">
-                        Restart All Servers
-                    </button>
-                    <button
-                        class="border border-orange-500 hover:bg-orange-100 text-orange-600 font-bold py-2 px-4 rounded shadow transition">
-                        Broadcast Message
-                    </button>
-                    <button
-                        class="border border-orange-500 hover:bg-orange-100 text-orange-600 font-bold py-2 px-4 rounded shadow transition">
-                        View Backups
+        <div class="min-h-screen bg-neutral-50 dark:bg-transparent">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <!-- Header Section -->
+                <div class="mb-8 flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-bold text-neutral-900 dark:text-white">Support Tickets</h1>
+                        <p class="mt-2 text-neutral-600 dark:text-neutral-300">
+                            Správa a řešení podporních požadavků od hráčů
+                        </p>
+                    </div>
+                    <button @click="showCreateModal = true"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                        Vytvořit Ticket
                     </button>
                 </div>
-            </div>
 
-            <!-- Main Cards -->
-            <div class="grid md:grid-cols-3 gap-4">
-                <!-- Open Tickets -->
-                <div class="rounded-xl border-2 border-orange-500 p-4">
-                    <h2 class="font-bold text-lg mb-2 text-orange-500">Open Tickets</h2>
-                    <ul>
-                        <li v-for="ticket in openTickets" :key="ticket.id" class="mb-3">
-                            <div class="font-semibold">{{ ticket.subject }}</div>
-                            <div class="text-xs text-gray-500">
-                                #{{ ticket.id }} • {{ ticket.user }} • {{ ticket.created }}
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div
+                        class="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-lg bg-red-100 dark:bg-red-900/30">
+                                <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
                             </div>
-                            <span class="inline-block px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs">{{
-                                ticket.status }}</span>
-                        </li>
-                    </ul>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-neutral-600 dark:text-neutral-300">Otevřené</p>
+                                <p class="text-2xl font-bold text-neutral-900 dark:text-white">{{ openCount }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-lg bg-yellow-100 dark:bg-yellow-900/30">
+                                <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-neutral-600 dark:text-neutral-300">V řešení</p>
+                                <p class="text-2xl font-bold text-neutral-900 dark:text-white">{{ inProgressCount }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-lg bg-green-100 dark:bg-green-900/30">
+                                <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-neutral-600 dark:text-neutral-300">Vyřešené</p>
+                                <p class="text-2xl font-bold text-neutral-900 dark:text-white">{{ resolvedCount }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-lg bg-neutral-100 dark:bg-neutral-700">
+                                <svg class="w-6 h-6 text-neutral-600 dark:text-neutral-300" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-neutral-600 dark:text-neutral-300">Celkem</p>
+                                <p class="text-2xl font-bold text-neutral-900 dark:text-white">{{ totalCount }}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <!-- Recent Player Activity -->
-                <div class="rounded-xl border-2 border-orange-500 p-4">
-                    <h2 class="font-bold text-lg mb-2 text-orange-500">Recent Player Activity</h2>
-                    <ul>
-                        <li v-for="p in recentPlayers" :key="p.name + p.time" class="mb-2">
-                            <span class="font-semibold text-orange-700">{{ p.name }}</span>
-                            <span class="text-xs text-orange-500"> {{ p.action }} </span>
-                            <span class="text-gray-700">on {{ p.server }}</span>
-                            <span class="text-xs text-gray-400 float-right">{{ p.time }}</span>
-                        </li>
-                    </ul>
+
+                <!-- Filters -->
+                <div
+                    class="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6 mb-8">
+                    <div class="flex flex-wrap gap-4 items-center">
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Status</label>
+                            <select v-model="selectedStatus"
+                                class="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white px-3 py-2">
+                                <option value="">Všechny</option>
+                                <option value="open">Otevřené</option>
+                                <option value="in_progress">V řešení</option>
+                                <option value="resolved">Vyřešené</option>
+                                <option value="closed">Uzavřené</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Priorita</label>
+                            <select v-model="selectedPriority"
+                                class="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white px-3 py-2">
+                                <option value="">Všechny</option>
+                                <option value="low">Nízká</option>
+                                <option value="medium">Střední</option>
+                                <option value="high">Vysoká</option>
+                                <option value="urgent">Urgentní</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Kategorie</label>
+                            <select v-model="selectedCategory"
+                                class="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white px-3 py-2">
+                                <option value="">Všechny</option>
+                                <option value="technical">Technické</option>
+                                <option value="gameplay">Gameplay</option>
+                                <option value="player_report">Nahlášení hráče</option>
+                                <option value="other">Ostatní</option>
+                            </select>
+                        </div>
+
+                        <div class="flex-1">
+                            <label
+                                class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Hledat</label>
+                            <input v-model="searchTerm" type="text"
+                                placeholder="Hledat podle předmětu nebo uživatele..."
+                                class="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white px-3 py-2">
+                        </div>
+                    </div>
                 </div>
-                <!-- Recent Logs -->
-                <div class="rounded-xl border-2 border-orange-500 p-4">
-                    <h2 class="font-bold text-lg mb-2 text-orange-500">Recent Logs</h2>
-                    <ul class="text-xs font-mono text-gray-700">
-                        <li v-for="log in recentLogs" :key="log.time + log.message">
-                            <span class="text-orange-400">{{ log.time }}</span> {{ log.message }}
-                        </li>
-                    </ul>
+
+                <!-- Tickets Table -->
+                <div
+                    class="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
+                        <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">Tickets</h2>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full table-fixed">
+                            <thead class="bg-neutral-50 dark:bg-neutral-700">
+                                <tr>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider w-12">
+                                        ID</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider w-40">
+                                        Předmět</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider w-32 hidden md:table-cell">
+                                        Uživatel</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider w-24">
+                                        Status</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider w-24 hidden sm:table-cell">
+                                        Priorita</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider w-32 hidden lg:table-cell">
+                                        Kategorie</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider w-28 hidden md:table-cell">
+                                        Vytvořeno</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider w-32">
+                                        Akce</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-neutral-200 dark:divide-neutral-700">
+                                <tr v-for="ticket in filteredTickets" :key="ticket.id"
+                                    class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+                                    <td
+                                        class="px-4 py-4 whitespace-nowrap text-sm font-medium text-neutral-900 dark:text-white">
+                                        #{{ ticket.id }}</td>
+                                    <td
+                                        class="px-4 py-4 text-sm text-neutral-900 dark:text-white max-w-[10rem] truncate">
+                                        {{ ticket.subject }}</td>
+                                    <td
+                                        class="px-4 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-white hidden md:table-cell">
+                                        {{ ticket.user }}</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">
+                                        <span :class="getStatusClass(ticket.status)"
+                                            class="px-2 py-1 text-xs font-medium rounded-full">
+                                            {{ getStatusText(ticket.status) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-4 whitespace-nowrap hidden sm:table-cell">
+                                        <span :class="getPriorityClass(ticket.priority)"
+                                            class="px-2 py-1 text-xs font-medium rounded-full">
+                                            {{ getPriorityText(ticket.priority) }}
+                                        </span>
+                                    </td>
+                                    <td
+                                        class="px-4 py-4 whitespace-nowrap text-sm text-neutral-600 dark:text-neutral-300 hidden lg:table-cell">
+                                        {{ getCategoryText(ticket.category) }}
+                                    </td>
+                                    <td
+                                        class="px-4 py-4 whitespace-nowrap text-sm text-neutral-600 dark:text-neutral-300 hidden md:table-cell">
+                                        {{ ticket.created }}
+                                    </td>
+                                    <td class="px-4 py-4 whitespace-nowrap text-sm">
+                                        <div class="flex space-x-2">
+                                            <button @click="$inertia.visit(`/tickets/${ticket.id}`)"
+                                                class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                                Zobrazit
+                                            </button>
+                                            <button @click="editTicket(ticket)"
+                                                class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300">
+                                                Upravit
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div
+                        class="px-6 py-4 border-t border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+                        <div class="text-sm text-neutral-600 dark:text-neutral-300">
+                            Zobrazeno {{ filteredTickets.length }} z {{ totalCount }} tickets
+                        </div>
+                        <div class="flex space-x-2">
+                            <button
+                                class="px-3 py-1 border border-neutral-300 dark:border-neutral-600 rounded text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                                Předchozí
+                            </button>
+                            <button class="px-3 py-1 bg-blue-600 text-white rounded text-sm">
+                                1
+                            </button>
+                            <button
+                                class="px-3 py-1 border border-neutral-300 dark:border-neutral-600 rounded text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                                2
+                            </button>
+                            <button
+                                class="px-3 py-1 border border-neutral-300 dark:border-neutral-600 rounded text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                                Další
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Admin Actions -->
-            <div>
-                <h2 class="font-bold text-xl mb-2 text-orange-500">Recent Admin Actions</h2>
-                <ul>
-                    <li v-for="a in adminActions" :key="a.admin + a.time" class="mb-2">
-                        <span class="font-semibold text-orange-700">{{ a.admin }}</span>
-                        <span class="text-gray-700"> {{ a.action }} </span>
-                        <span class="text-xs text-gray-400 float-right">{{ a.time }}</span>
-                    </li>
-                </ul>
+        <!-- Create Ticket Modal -->
+        <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white dark:bg-neutral-800 rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
+                    <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">Vytvořit nový ticket</h3>
+                </div>
+
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Předmět</label>
+                        <input v-model="newTicket.subject" type="text"
+                            class="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white px-3 py-2">
+                    </div>
+
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Uživatel</label>
+                        <input v-model="newTicket.user" type="text"
+                            class="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white px-3 py-2">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Priorita</label>
+                            <select v-model="newTicket.priority"
+                                class="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white px-3 py-2">
+                                <option value="low">Nízká</option>
+                                <option value="medium">Střední</option>
+                                <option value="high">Vysoká</option>
+                                <option value="urgent">Urgentní</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Kategorie</label>
+                            <select v-model="newTicket.category"
+                                class="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white px-3 py-2">
+                                <option value="technical">Technické</option>
+                                <option value="gameplay">Gameplay</option>
+                                <option value="player_report">Nahlášení hráče</option>
+                                <option value="other">Ostatní</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Popis</label>
+                        <textarea v-model="newTicket.description" rows="4"
+                            class="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white px-3 py-2"></textarea>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 border-t border-neutral-200 dark:border-neutral-700 flex justify-end space-x-3">
+                    <button @click="showCreateModal = false"
+                        class="px-4 py-2 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                        Zrušit
+                    </button>
+                    <button @click="createTicket" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                        Vytvořit ticket
+                    </button>
+                </div>
             </div>
         </div>
     </AppLayout>
 </template>
+
+<script setup lang="ts">
+import AppLayout from '@/layouts/AppLayout.vue';
+import { type BreadcrumbItem } from '@/types';
+import { Head } from '@inertiajs/vue3';
+import { ref, computed, onMounted, defineProps } from 'vue';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Tickets', href: '/tickets' },
+];
+
+const showCreateModal = ref(false);
+const selectedStatus = ref('');
+const selectedPriority = ref('');
+const selectedCategory = ref('');
+const searchTerm = ref('');
+
+const newTicket = ref({
+    subject: '',
+    user: '',
+    priority: 'medium',
+    category: 'technical',
+    description: ''
+});
+
+const props = defineProps<{ tickets: any[] }>();
+const tickets = ref(props.tickets ?? []);
+
+const filteredTickets = computed(() => {
+    return tickets.value.filter(ticket => {
+        const matchesStatus = !selectedStatus.value || ticket.status === selectedStatus.value;
+        const matchesPriority = !selectedPriority.value || ticket.priority === selectedPriority.value;
+        const matchesCategory = !selectedCategory.value || ticket.category === selectedCategory.value;
+        const matchesSearch = !searchTerm.value ||
+            ticket.subject.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
+            ticket.user.toLowerCase().includes(searchTerm.value.toLowerCase());
+
+        return matchesStatus && matchesPriority && matchesCategory && matchesSearch;
+    });
+});
+
+const openCount = computed(() => tickets.value.filter(t => t.status === 'open').length);
+const inProgressCount = computed(() => tickets.value.filter(t => t.status === 'in_progress').length);
+const resolvedCount = computed(() => tickets.value.filter(t => t.status === 'resolved').length);
+const totalCount = computed(() => tickets.value.length);
+
+const getStatusClass = (status: string) => {
+    const classes = {
+        'open': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+        'in_progress': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+        'resolved': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+        'closed': 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+    };
+    return classes[status] || classes.open;
+};
+
+const getStatusText = (status: string) => {
+    const texts = {
+        'open': 'Otevřené',
+        'in_progress': 'V řešení',
+        'resolved': 'Vyřešené',
+        'closed': 'Uzavřené'
+    };
+    return texts[status] || 'Neznámé';
+};
+
+const getPriorityClass = (priority: string) => {
+    const classes = {
+        'low': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+        'medium': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+        'high': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+        'urgent': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+    };
+    return classes[priority] || classes.medium;
+};
+
+const getPriorityText = (priority: string) => {
+    const texts = {
+        'low': 'Nízká',
+        'medium': 'Střední',
+        'high': 'Vysoká',
+        'urgent': 'Urgentní'
+    };
+    return texts[priority] || 'Střední';
+};
+
+const getCategoryText = (category: string) => {
+    const texts = {
+        'technical': 'Technické',
+        'gameplay': 'Gameplay',
+        'player_report': 'Nahlášení hráče',
+        'other': 'Ostatní'
+    };
+    return texts[category] || 'Ostatní';
+};
+
+const viewTicket = (ticket: any) => {
+    // Implement view ticket logic
+    console.log('Viewing ticket:', ticket);
+};
+
+const editTicket = (ticket: any) => {
+    // Implement edit ticket logic
+    console.log('Editing ticket:', ticket);
+};
+
+const createTicket = () => {
+    // Implement create ticket logic
+    const ticket = {
+        id: tickets.value.length + 1,
+        ...newTicket.value,
+        status: 'open',
+        created: new Date().toISOString().split('T')[0]
+    };
+
+    tickets.value.unshift(ticket);
+    showCreateModal.value = false;
+
+    // Reset form
+    newTicket.value = {
+        subject: '',
+        user: '',
+        priority: 'medium',
+        category: 'technical',
+        description: ''
+    };
+};
+
+onMounted(() => {
+    // Load tickets data if needed
+});
+</script>
