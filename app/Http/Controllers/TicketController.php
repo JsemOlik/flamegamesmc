@@ -103,6 +103,8 @@ class TicketController extends Controller
                 'avatarUrl' => "https://mc-heads.net/avatar/" . urlencode($ticket->owner->username) . "/40",
             ],
             'canManageParticipants' => $user->role === 'admin' || $ticket->owner->username === $user->name,
+            'currentUserRole' => $user->role,
+            'currentUsername' => $user->name,
         ]);
     }
 
