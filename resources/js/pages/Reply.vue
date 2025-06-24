@@ -165,7 +165,7 @@
                             </div>
 
                             <div class="space-y-3">
-                                <!-- Show admin at the top if they have sent a message -->
+                                <!-- Always show admin at the top if they have sent a message -->
                                 <div v-if="messages.some(m => m.isAdmin)" class="flex items-center justify-between">
                                     <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">

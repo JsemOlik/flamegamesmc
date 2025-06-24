@@ -11,16 +11,29 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Schema::create('users', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->string('name');
+        //     $table->string('email')->unique();
+        //     $table->timestamp('email_verified_at')->nullable();
+        //     $table->string('password');
+        //     $table->string('role')->default('player');
+        //     $table->rememberToken();
+        //     $table->timestamps();
+        // });
+
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
+            $table->string('email')->nullable()->unique(); // email can now be null
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+            $table->string('password')->nullable(); // password isn't used for login
+            $table->string('code')->nullable()->unique(); // <- Add this line
             $table->string('role')->default('player');
             $table->rememberToken();
             $table->timestamps();
         });
+        
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
@@ -36,36 +49,6 @@ return new class extends Migration
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });
-
-        // // Tickets table
-        // Schema::create('tickets', function (Blueprint $table) {
-        //     $table->id();
-        //     $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-        //     $table->string('subject');
-        //     $table->enum('priority', ['low', 'medium', 'high', 'urgent'])->default('medium');
-        //     $table->enum('category', ['technical', 'gameplay', 'player_report', 'other'])->default('technical');
-        //     $table->enum('status', ['open', 'in_progress', 'resolved', 'closed'])->default('open');
-        //     $table->timestamps();
-        // });
-
-        // // Ticket messages table
-        // Schema::create('ticket_messages', function (Blueprint $table) {
-        //     $table->id();
-        //     $table->foreignId('ticket_id')->constrained('tickets')->onDelete('cascade');
-        //     $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-        //     $table->text('message');
-        //     $table->timestamps();
-        // });
-
-        // // Ticket participants table
-        // Schema::create('ticket_participants', function (Blueprint $table) {
-        //     $table->id();
-        //     $table->foreignId('ticket_id')->constrained('tickets')->onDelete('cascade');
-        //     $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-        //     $table->enum('role', ['owner', 'participant'])->default('participant');
-        //     $table->timestamps();
-        //     $table->unique(['ticket_id', 'user_id']);
-        // });
     }
 
     /**
@@ -76,8 +59,5 @@ return new class extends Migration
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
-        // Schema::dropIfExists('tickets');
-        // Schema::dropIfExists('ticket_messages');
-        // Schema::dropIfExists('ticket_participants');
     }
 };
