@@ -263,18 +263,19 @@ class TicketController extends Controller
     {
         $user = auth()->user();
         $ticket = Ticket::findOrFail($id);
-
+    
         // Only admin or ticket owner can remove participants
         if ($user->role !== 'admin' && $ticket->owner->username !== $user->name) {
             abort(403, 'Unauthorized');
         }
-
+    
         $request->validate([
             'username' => 'required|string|max:32',
         ]);
-
+    
         $ticket->removeParticipant($request->username);
-
-        return back()->with('success', 'Účastník odebrán.');
+    
+        // Return JSON for AJAX requests
+        return response()->json(['success' => true]);
     }
 }
