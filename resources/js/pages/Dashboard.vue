@@ -13,17 +13,20 @@
 
                 <NetworkStats :networkStats="networkStats" />
 
-                <NodeStatusTable :nodes="nodes" />
+                <div v-if="loadingNodes && nodes.length === 0">
+                    <Skeleton class="h-32 w-full mb-8" />
+                </div>
+                <NodeStatusTable v-else :nodes="nodes" />
 
                 <QuickActions />
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <OpenTickets :openTickets="openTickets" />
+                    <OpenTickets :openTickets="openTickets" :loading="loadingTickets" />
                     <PlayerActivity :recentPlayers="recentPlayers" />
-                    <RecentLogs :recentLogs="recentLogs" />
+                    <RecentLogs :recentLogs="recentLogs" :loading="loadingLogs" />
                 </div>
 
-                <AdminActions :adminActions="adminActions" />
+                <AdminActions :adminActions="adminActions" :loading="loadingAdminActions" />
             </div>
         </div>
     </AppLayout>
@@ -42,6 +45,7 @@ import RecentLogs from '@/components/dashboard/RecentLogs.vue';
 import AdminActions from '@/components/dashboard/AdminActions.vue';
 import { ref, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
+import Skeleton from '@/components/ui/skeleton/Skeleton.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -55,10 +59,15 @@ const networkStats = ref({
 });
 
 const nodes = ref<Array<any>>([]);
+const loadingNodes = ref(true);
+let firstLoad = true;
 
 let pollInterval: any = null;
 onMounted(async () => {
+    loadingNodes.value = true;
     await fetchStatus();
+    loadingNodes.value = false;
+    firstLoad = false;
     pollInterval = setInterval(fetchStatus, 10000);
 });
 onUnmounted(() => {
@@ -91,27 +100,71 @@ async function fetchStatus() {
     }
 }
 
-const openTickets = [
-    { id: 1, subject: 'Griefing in spawn', status: 'Open', created: '2025-06-22', user: 'Steve' },
-    { id: 2, subject: 'Cannot connect to server', status: 'Open', created: '2025-06-21', user: 'Alex' },
-    { id: 3, subject: 'Lag on Skyblock', status: 'Open', created: '2025-06-20', user: 'Herobrine' },
-];
+const openTickets = ref([]);
+const loadingTickets = ref(true);
+const recentLogs = ref([]);
+const loadingLogs = ref(true);
+const adminActions = ref([]);
+const loadingAdminActions = ref(true);
 
-const recentLogs = [
-    { time: '12:01', message: '[INFO] Player Steve joined Survival-1' },
-    { time: '12:03', message: '[WARN] Lag detected on Skyblock-1' },
-    { time: '12:05', message: '[INFO] Player Alex left Lobby-1' },
-    { time: '12:06', message: '[ADMIN] /restart Minigames-1 by Admin' },
-];
+onMounted(async () => {
+    await fetchRecentTickets();
+    await fetchRecentLogs();
+    await fetchAdminActions();
+});
+
+async function fetchRecentTickets() {
+    loadingTickets.value = true;
+    try {
+        const res = await axios.get('/tickets/recent');
+        openTickets.value = res.data;
+    } catch (e) {
+        openTickets.value = [];
+    }
+    loadingTickets.value = false;
+}
+
+async function fetchRecentLogs() {
+    loadingLogs.value = true;
+    try {
+        const res = await axios.get('/api/recent-logs');
+        recentLogs.value = res.data;
+    } catch (e) {
+        recentLogs.value = [];
+    }
+    loadingLogs.value = false;
+}
+
+async function fetchAdminActions() {
+    loadingAdminActions.value = true;
+    try {
+        const res = await axios.get('/api/recent-logs');
+        // Map to the format expected by AdminActions.vue
+        adminActions.value = (res.data || []).map(log => {
+            // Try to extract admin and action from the message
+            // Fallback to splitting the message if needed
+            let admin = 'Admin';
+            let action = log.message;
+            const match = log.message.match(/^(.*?) (otevřel|uzavřel|změnil|restartoval|spustil|vypnul|provedl)/);
+            if (match) {
+                admin = match[1];
+                action = log.message.replace(admin + ' ', '');
+            }
+            return {
+                admin,
+                action,
+                time: log.time,
+            };
+        });
+    } catch (e) {
+        adminActions.value = [];
+    }
+    loadingAdminActions.value = false;
+}
 
 const recentPlayers = [
     { name: 'Steve', action: 'joined', server: 'Survival-1', time: '12:01' },
     { name: 'Alex', action: 'left', server: 'Lobby-1', time: '12:05' },
     { name: 'Herobrine', action: 'joined', server: 'Skyblock-1', time: '12:10' },
-];
-
-const adminActions = [
-    { admin: 'Admin', action: 'Restarted Minigames-1', time: '12:06' },
-    { admin: 'Mod', action: 'Banned Notch', time: '11:50' },
 ];
 </script>

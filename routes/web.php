@@ -8,6 +8,7 @@ use App\Http\Controllers\ServerControlController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\DB;
 
 use App\Models\Ticket;
 use App\Models\User;
@@ -65,6 +66,7 @@ Route::post('/tickets', [TicketController::class, 'store'])
 // Group all ticket-specific routes
 Route::middleware(['auth', 'verified'])->group(function () {
     // Ticket detail routes
+    Route::get('/tickets/recent', [TicketController::class, 'recentOpen']);
     Route::get('/tickets/{id}', [TicketController::class, 'show'])->name('tickets.reply');
     Route::post('/tickets/{id}/reply', [TicketController::class, 'reply']);
     Route::patch('/tickets/{id}/status', [TicketController::class, 'updateStatus']);
@@ -77,7 +79,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Bulk actions
     Route::post('/tickets/mass-complete', [TicketController::class, 'massComplete']);
     Route::post('/tickets/mass-delete', [TicketController::class, 'massDelete']);
-
+    
     // Change user password
     Route::post('/users/{user}/change-password', function (Request $request, User $user) {
         $request->validate([
@@ -85,6 +87,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
         $user->password = Hash::make($request->password);
         $user->save();
+        // Log admin action
+        $admin = auth()->user();
+        if ($admin && $admin->role === 'admin') {
+            DB::table('admin_logs')->insert([
+                'admin_id' => $admin->id,
+                'action' => 'change_password',
+                'target_type' => 'user',
+                'target_id' => $user->id,
+                'details' => json_encode(['user_email' => $user->email]),
+                'ip_address' => $request->ip(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
         return response()->json(['success' => true]);
     });
 
@@ -95,6 +111,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
         $user->role = $request->role;
         $user->save();
+        // Log admin action
+        $admin = auth()->user();
+        if ($admin && $admin->role === 'admin') {
+            DB::table('admin_logs')->insert([
+                'admin_id' => $admin->id,
+                'action' => 'change_role',
+                'target_type' => 'user',
+                'target_id' => $user->id,
+                'details' => json_encode(['user_email' => $user->email, 'new_role' => $user->role]),
+                'ip_address' => $request->ip(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
         return response()->json(['success' => true, 'role' => $user->role]);
     });
 });
@@ -102,7 +132,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::get('/seed-tickets', function () {
     DB::connection('tickets')->transaction(function () {
         $ticket = Ticket::create([
-            'username' => 'Steve',
+            'username' => ' Steve',
             'subject' => 'Test ticket',
             'priority' => 'high',
             'category' => 'technical',
@@ -126,6 +156,7 @@ Route::get('/seed-tickets', function () {
 
 Route::get('/api/servers/status', [ServerStatusController::class, 'index']);
 Route::post('/api/servers/{id}/power', [ServerControlController::class, 'power']);
+Route::get('/api/recent-logs', [ServerStatusController::class, 'recentLogs']);
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

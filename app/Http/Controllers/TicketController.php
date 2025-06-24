@@ -6,6 +6,7 @@ use App\Models\TicketMessage;
 use App\Models\Ticket;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TicketController extends Controller
 {
@@ -186,6 +187,20 @@ class TicketController extends Controller
             'message' => $request->description,
         ]);
 
+        // Log admin action
+        if ($user->role === 'admin') {
+            DB::table('admin_logs')->insert([
+                'admin_id' => $user->id,
+                'action' => 'open_ticket',
+                'target_type' => 'ticket',
+                'target_id' => $ticket->id,
+                'details' => json_encode(['subject' => $ticket->subject]),
+                'ip_address' => $request->ip(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
         return redirect()->route('tickets.index')->with('success', 'Ticket vytvořen!');
     }
 
@@ -223,8 +238,22 @@ class TicketController extends Controller
             abort(403, 'Unauthorized');
         }
         $request->validate(['status' => 'required|in:open,in_progress,resolved,closed']);
+        $oldStatus = $ticket->status;
         $ticket->status = $request->status;
         $ticket->save();
+        // Log admin action
+        if ($user->role === 'admin') {
+            DB::table('admin_logs')->insert([
+                'admin_id' => $user->id,
+                'action' => $request->status === 'resolved' ? 'close_ticket' : 'update_ticket_status',
+                'target_type' => 'ticket',
+                'target_id' => $ticket->id,
+                'details' => json_encode(['old_status' => $oldStatus, 'new_status' => $ticket->status]),
+                'ip_address' => $request->ip(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
         return response()->json(['status' => $ticket->status]);
     }
 
@@ -279,5 +308,26 @@ class TicketController extends Controller
     
         // Return JSON for AJAX requests
         return response()->json(['success' => true]);
+    }
+
+    public function recentOpen()
+    {
+        $tickets = \App\Models\Ticket::with(['owner'])
+            ->where('status', 'open')
+            ->orderByDesc('created_at')
+            ->limit(3)
+            ->get();
+
+        $tickets = $tickets->map(function ($ticket) {
+            return [
+                'id' => $ticket->id,
+                'subject' => $ticket->subject,
+                'status' => ucfirst($ticket->status),
+                'created' => $ticket->created_at->format('Y-m-d'),
+                'user' => $ticket->owner ? $ticket->owner->username : 'unknown',
+            ];
+        });
+
+        return response()->json($tickets);
     }
 }

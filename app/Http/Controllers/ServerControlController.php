@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 
 class ServerControlController extends Controller
 {
@@ -18,6 +19,7 @@ class ServerControlController extends Controller
 
     protected function sendPowerAction(string $serverId, string $action)
     {
+        $user = auth()->user();
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->apiKey,
             'Accept' => 'application/json',
@@ -33,6 +35,20 @@ class ServerControlController extends Controller
                 'body' => $response->body(),
             ]);
             return response()->json(['error' => 'Failed to send power action', 'details' => $response->body()], 500);
+        }
+
+        // Log admin action
+        if ($user && $user->role === 'admin') {
+            DB::table('admin_logs')->insert([
+                'admin_id' => $user->id,
+                'action' => $action . '_server',
+                'target_type' => 'server',
+                'target_id' => $serverId,
+                'details' => json_encode(['response' => $response->json()]),
+                'ip_address' => request()->ip(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
 
         return response()->json(['message' => ucfirst($action) . ' signal sent']);

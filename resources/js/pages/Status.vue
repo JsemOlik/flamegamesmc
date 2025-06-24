@@ -76,7 +76,10 @@
                             <button @click="refreshNodes" :disabled="loadingNodes" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-base rounded-lg transition-all duration-200 shadow">Obnovit</button>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700 text-base">
+                            <div v-if="loadingNodes && nodes.length === 0">
+                                <Skeleton class="h-32 w-full mb-8" />
+                            </div>
+                            <table v-else class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700 text-base">
                                 <thead class="bg-neutral-50 dark:bg-neutral-900">
                                     <tr>
                                         <th class="px-6 py-4 text-left text-xs font-bold text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">Server</th>
@@ -162,6 +165,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { ref, reactive, onMounted, onUnmounted, computed } from 'vue';
 import axios from 'axios';
+import Skeleton from '@/components/ui/skeleton/Skeleton.vue';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -184,6 +188,7 @@ async function pingTicketing() {
 }
 
 const loadingNodes = ref(true);
+let firstLoad = true;
 const nodes = ref<Array<any>>([]);
 const nodeActionLoading = reactive<Record<string, boolean>>({});
 
@@ -245,7 +250,6 @@ function updateNodes(newNodes) {
 }
 
 async function fetchNodes() {
-    loadingNodes.value = true;
     try {
         const res = await axios.get('/api/servers/status');
         const newNodes = (res.data || []).map((n: any) => ({
@@ -254,9 +258,7 @@ async function fetchNodes() {
         }));
         updateNodes(newNodes);
     } catch (e) {
-        nodes.value = [];
-    } finally {
-        loadingNodes.value = false;
+        // handle error
     }
 }
 
@@ -291,8 +293,11 @@ async function pingNode(node: any) {
 }
 
 let pollInterval: any = null;
-onMounted(() => {
-    fetchNodes();
+onMounted(async () => {
+    loadingNodes.value = true;
+    await refreshNodes();
+    loadingNodes.value = false;
+    firstLoad = false;
     pingTicketing();
     pollInterval = setInterval(fetchNodes, 4000);
 });

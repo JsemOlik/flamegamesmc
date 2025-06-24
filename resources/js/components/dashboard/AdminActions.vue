@@ -5,8 +5,16 @@
             <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">Nedávné Admin Akce</h3>
         </div>
         <div class="p-6">
-            <div class="space-y-3">
-                <div v-for="action in adminActions" :key="action.admin + action.time"
+            <div v-if="props.loading" class="space-y-3 animate-pulse">
+                <div class="h-6 bg-orange-200 dark:bg-orange-900/40 rounded w-3/4 mb-2"></div>
+                <div class="h-6 bg-orange-200 dark:bg-orange-900/40 rounded w-2/3 mb-2"></div>
+                <div class="h-6 bg-orange-200 dark:bg-orange-900/40 rounded w-1/2"></div>
+            </div>
+            <div v-else-if="props.adminActions.length === 0" class="text-center text-neutral-500 dark:text-neutral-400 py-4">
+                Žádné admin akce k zobrazení.
+            </div>
+            <div v-else class="space-y-3">
+                <div v-for="action in props.adminActions" :key="action.admin + action.time"
                     class="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
                     <div class="flex items-center space-x-3">
                         <div class="flex-shrink-0">
@@ -41,6 +49,7 @@ const props = defineProps<{
         action: string;
         time: string;
     }>;
+    loading?: boolean;
 }>();
 </script>
 

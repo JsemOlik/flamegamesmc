@@ -5,7 +5,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Ticket, User, Server, Ellipsis } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Ticket, User, Server, Ellipsis, ChartLine } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const allNavItems: NavItem[] = [
@@ -15,22 +15,28 @@ const allNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Tickets',
+        title: 'Tickety',
         href: '/tickets',
         icon: Ticket,
     },
     {
-        title: 'Users',
+        title: 'Uživatelé',
         href: '/users',
         icon: User,
+    },
+    {
+        title: 'Statistiky',
+        href: '/statistic',
+        icon: ChartLine,
     },
     {
         title: 'Status',
         href: '/status',
         icon: Server,
     },
+
     {
-        title: 'Others',
+        title: 'Ostatní',
         href: '/others',
         icon: Ellipsis,
     },
