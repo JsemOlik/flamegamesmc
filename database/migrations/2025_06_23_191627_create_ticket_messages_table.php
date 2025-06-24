@@ -12,13 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ticket_messages', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('ticket_id')->constrained('tickets')->onDelete('cascade');
-        $table->string('sender', 32);
-        $table->text('message');
-        $table->timestamps();
-    });
-
+            $table->id();
+            $table->foreignId('ticket_id')->constrained('tickets')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->text('message');
+            $table->timestamps();
+        });
     }
 
     /**
@@ -28,4 +27,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('ticket_messages');
     }
-};
+}; 

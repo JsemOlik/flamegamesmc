@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TicketMessage;
 use App\Models\Ticket;
+use App\Models\User;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +25,7 @@ class TicketController extends Controller
             $tickets = Ticket::orderByDesc('id')->paginate($perPage);
         } else {
             $tickets = Ticket::whereHas('participants', function ($query) use ($user) {
-                $query->where('username', $user->name);
+                $query->where('user_id', $user->id);
             })
                 ->orderByDesc('id')
                 ->paginate($perPage);
@@ -55,33 +56,37 @@ class TicketController extends Controller
         $ticket = Ticket::with(['messages', 'participants'])->findOrFail($id);
 
         // Check if user can access this ticket
-        if ($user->role !== 'admin' && !$ticket->canAccess($user->name)) {
+        if ($user->role !== 'admin' && !$ticket->canAccess($user->id)) {
             abort(403, 'Unauthorized');
         }
 
         // Get ticket count for the ticket owner
         $userTicketCount = Ticket::whereHas('participants', function ($query) use ($ticket) {
-            $query->where('username', $ticket->owner->username)
+            $query->where('user_id', $ticket->owner->user_id)
                 ->where('role', 'owner');
         })->count();
 
         // Format messages for the frontend
-        $messages = $ticket->messages->map(function ($msg) use ($ticket) {
+        $messages = $ticket->messages->map(function ($msg) {
+            $user = \App\Models\User::find($msg->user_id);
+            $isAdmin = $user && $user->role === 'admin';
             return [
                 'id' => $msg->id,
                 'content' => $msg->message,
-                'author' => $msg->sender,
+                'author' => $isAdmin ? 'Admin' : ($user ? $user->name : 'unknown'),
                 'timestamp' => $msg->created_at->format('Y-m-d H:i'),
-                'isAdmin' => strtolower($msg->sender) === 'admin',
+                'isAdmin' => $isAdmin,
             ];
         });
 
         // Format participants for the frontend
         $participants = $ticket->participants->map(function ($participant) {
+            $user = User::find($participant->user_id);
             return [
-                'username' => $participant->username,
+                'user_id' => $participant->user_id,
+                'username' => $user ? $user->name : null,
                 'role' => $participant->role,
-                'avatarUrl' => "https://mc-heads.net/avatar/" . urlencode($participant->username) . "/40",
+                'avatarUrl' => $user ? ("https://mc-heads.net/avatar/" . urlencode($user->name) . "/40") : null,
             ];
         });
 
@@ -89,7 +94,7 @@ class TicketController extends Controller
             'id' => $ticket->id,
             'ticket' => [
                 'id' => $ticket->id,
-                'username' => $ticket->owner->username,
+                'username' => $ticket->owner ? (\App\Models\User::find($ticket->owner->user_id)->name ?? null) : null,
                 'subject' => $ticket->subject,
                 'priority' => $ticket->priority,
                 'category' => $ticket->category,
@@ -99,13 +104,14 @@ class TicketController extends Controller
             'messages' => $messages,
             'participants' => $participants,
             'userData' => [
-                'username' => $ticket->owner->username,
+                'user_id' => $ticket->owner->user_id,
+                'username' => $ticket->owner ? (\App\Models\User::find($ticket->owner->user_id)->name ?? null) : null,
                 'ticketCount' => $userTicketCount,
-                'avatarUrl' => "https://mc-heads.net/avatar/" . urlencode($ticket->owner->username) . "/40",
+                'avatarUrl' => $ticket->owner ? ("https://mc-heads.net/avatar/" . urlencode(\App\Models\User::find($ticket->owner->user_id)->name ?? '') . "/40") : null,
             ],
-            'canManageParticipants' => $user->role === 'admin' || $ticket->owner->username === $user->name,
+            'canManageParticipants' => $user->role === 'admin' || ($ticket->owner && $ticket->owner->user_id === $user->id),
             'currentUserRole' => $user->role,
-            'currentUsername' => $user->name,
+            'currentUserId' => $user->id,
         ]);
     }
 
@@ -118,7 +124,7 @@ class TicketController extends Controller
         $ticket = Ticket::findOrFail($id);
 
         $msg = $ticket->messages()->create([
-            'sender' => auth()->user()->role === 'admin' ? 'admin' : auth()->user()->name,
+            'user_id' => auth()->user()->id,
             'message' => $request->message,
         ]);
 
@@ -128,12 +134,14 @@ class TicketController extends Controller
             $ticket->save();
         }
 
+        $user = \App\Models\User::find($msg->user_id);
+        $isAdmin = $user && $user->role === 'admin';
         return response()->json([
             'id' => $msg->id,
             'content' => $msg->message,
-            'author' => $msg->sender,
+            'author' => $isAdmin ? 'Admin' : ($user ? $user->name : 'unknown'),
             'timestamp' => $msg->created_at->format('Y-m-d H:i'),
-            'isAdmin' => strtolower($msg->sender) === 'admin',
+            'isAdmin' => $isAdmin,
             'status' => $ticket->status,
         ]);
     }
@@ -157,8 +165,26 @@ class TicketController extends Controller
 
         $request->validate($rules);
 
+        // Determine owner ID
+        $inputUsername = $request->input('user');
+        $foundUser = null;
+        $ownerId = $user->role === 'admin' ? (function() use ($inputUsername, &$foundUser) {
+            $foundUser = \App\Models\User::where('name', $inputUsername)->first();
+            return $foundUser ? $foundUser->id : null;
+        })() : $user->id;
+        
+        \Log::info('Admin ticket creation debug', [
+            'inputUsername' => $inputUsername,
+            'foundUser' => $foundUser,
+            'ownerId' => $ownerId,
+        ]);
+        if ($user->role === 'admin' && !$ownerId) {
+            return back()->withErrors(['user' => 'Selected user does not exist.']);
+        }
+
         // Create ticket
         $ticket = Ticket::create([
+            'user_id' => $ownerId,
             'subject' => $request->subject,
             'priority' => $request->priority,
             'category' => $request->category,
@@ -166,36 +192,33 @@ class TicketController extends Controller
         ]);
 
         // Add owner as participant
-        $ownerUsername = $user->role === 'admin' ? $request->input('user') : $user->name;
         $ticket->participants()->create([
-            'username' => $ownerUsername,
+            'user_id' => $ownerId,
             'role' => 'owner',
         ]);
 
         // Add additional participants
         if ($request->has('participants')) {
-            foreach ($request->participants as $username) {
-                if ($username !== $ownerUsername) {
-                    $ticket->addParticipant($username);
+            foreach ($request->participants as $participantName) {
+                $participantId = \App\Models\User::where('name', $participantName)->value('id');
+                if ($participantId && $participantId !== $ownerId) {
+                    $ticket->addParticipant($participantId);
                 }
             }
         }
 
         // Create initial message
         $ticket->messages()->create([
-            'sender' => $user->role === 'admin' ? 'admin' : $user->name,
+            'user_id' => $user->id,
             'message' => $request->description,
         ]);
 
         // Log admin action
         if ($user->role === 'admin') {
             DB::table('admin_logs')->insert([
-                'admin_id' => $user->id,
+                'user_id' => $user->id,
                 'action' => 'open_ticket',
-                'target_type' => 'ticket',
-                'target_id' => $ticket->id,
-                'details' => json_encode(['subject' => $ticket->subject]),
-                'ip_address' => $request->ip(),
+                'description' => 'Ticket #' . $ticket->id . ' created. Subject: ' . $ticket->subject,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -210,7 +233,7 @@ class TicketController extends Controller
         $ids = $request->input('ids', []);
         if ($user->role !== 'admin') {
             // Only allow players to complete their own tickets
-            Ticket::whereIn('id', $ids)->where('username', $user->name)->update(['status' => 'resolved']);
+            Ticket::whereIn('id', $ids)->where('user_id', $user->id)->update(['status' => 'resolved']);
         } else {
             Ticket::whereIn('id', $ids)->update(['status' => 'resolved']);
         }
@@ -223,7 +246,7 @@ class TicketController extends Controller
         $ids = $request->input('ids', []);
         if ($user->role !== 'admin') {
             // Only allow players to delete their own tickets
-            Ticket::whereIn('id', $ids)->where('username', $user->name)->delete();
+            Ticket::whereIn('id', $ids)->where('user_id', $user->id)->delete();
         } else {
             Ticket::whereIn('id', $ids)->delete();
         }
@@ -234,7 +257,7 @@ class TicketController extends Controller
     {
         $ticket = Ticket::findOrFail($id);
         $user = auth()->user();
-        if ($user->role !== 'admin' && $ticket->username !== $user->name) {
+        if ($user->role !== 'admin' && $ticket->user_id !== $user->id) {
             abort(403, 'Unauthorized');
         }
         $request->validate(['status' => 'required|in:open,in_progress,resolved,closed']);
@@ -244,12 +267,9 @@ class TicketController extends Controller
         // Log admin action
         if ($user->role === 'admin') {
             DB::table('admin_logs')->insert([
-                'admin_id' => $user->id,
+                'user_id' => $user->id,
                 'action' => $request->status === 'resolved' ? 'close_ticket' : 'update_ticket_status',
-                'target_type' => 'ticket',
-                'target_id' => $ticket->id,
-                'details' => json_encode(['old_status' => $oldStatus, 'new_status' => $ticket->status]),
-                'ip_address' => $request->ip(),
+                'description' => 'Ticket #' . $ticket->id . ' status changed from ' . $oldStatus . ' to ' . $ticket->status,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -261,7 +281,7 @@ class TicketController extends Controller
     {
         $ticket = Ticket::findOrFail($id);
         $user = auth()->user();
-        if ($user->role !== 'admin' && $ticket->username !== $user->name) {
+        if ($user->role !== 'admin' && $ticket->user_id !== $user->id) {
             abort(403, 'Unauthorized');
         }
         $request->validate(['priority' => 'required|in:low,medium,high,urgent']);
@@ -277,15 +297,24 @@ class TicketController extends Controller
         $ticket = Ticket::findOrFail($id);
 
         // Only admin or ticket owner can add participants
-        if ($user->role !== 'admin' && $ticket->owner->username !== $user->name) {
+        if ($user->role !== 'admin' && $ticket->owner->user_id !== $user->id) {
             abort(403, 'Unauthorized');
         }
 
+        // Accept either user_id or username
+        if ($request->has('username')) {
+            $participantUser = \App\Models\User::where('name', $request->username)->first();
+            if (!$participantUser) {
+                return back()->withErrors(['username' => 'User not found.']);
+            }
+            $request->merge(['user_id' => $participantUser->id]);
+        }
+
         $request->validate([
-            'username' => 'required|string|max:32',
+            'user_id' => 'required|integer|exists:users,id',
         ]);
 
-        $ticket->addParticipant($request->username);
+        $ticket->addParticipant($request->user_id);
 
         return back()->with('success', 'Účastník přidán.');
     }
@@ -296,15 +325,24 @@ class TicketController extends Controller
         $ticket = Ticket::findOrFail($id);
     
         // Only admin or ticket owner can remove participants
-        if ($user->role !== 'admin' && $ticket->owner->username !== $user->name) {
+        if ($user->role !== 'admin' && $ticket->owner->user_id !== $user->id) {
             abort(403, 'Unauthorized');
         }
     
+        // Accept either user_id or username
+        if ($request->has('username')) {
+            $participantUser = \App\Models\User::where('name', $request->username)->first();
+            if (!$participantUser) {
+                return response()->json(['error' => 'User not found.'], 422);
+            }
+            $request->merge(['user_id' => $participantUser->id]);
+        }
+    
         $request->validate([
-            'username' => 'required|string|max:32',
+            'user_id' => 'required|integer|exists:users,id',
         ]);
     
-        $ticket->removeParticipant($request->username);
+        $ticket->removeParticipant($request->user_id);
     
         // Return JSON for AJAX requests
         return response()->json(['success' => true]);

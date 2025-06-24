@@ -6,9 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Ticket extends Model
 {
-    protected $connection = 'tickets';
     protected $table = 'tickets';
-    protected $fillable = ['subject', 'priority', 'category', 'status'];
+    protected $fillable = ['user_id', 'subject', 'priority', 'category', 'status'];
 
     public function messages()
     {
@@ -25,27 +24,27 @@ class Ticket extends Model
         return $this->hasOne(TicketParticipant::class)->where('role', 'owner');
     }
 
-    public function addParticipant(string $username)
+    public function addParticipant(int $user_id)
     {
         return $this->participants()->firstOrCreate(
-            ['username' => $username],
+            ['user_id' => $user_id],
             ['role' => 'participant']
         );
     }
 
-    public function removeParticipant(string $username)
+    public function removeParticipant(int $user_id)
     {
         // Don't allow removing the owner
         return $this->participants()
-            ->where('username', $username)
+            ->where('user_id', $user_id)
             ->where('role', 'participant')
             ->delete();
     }
 
-    public function canAccess(string $username): bool
+    public function canAccess(int $user_id): bool
     {
         return $this->participants()
-            ->where('username', $username)
+            ->where('user_id', $user_id)
             ->exists();
     }
 }

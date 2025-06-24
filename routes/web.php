@@ -57,6 +57,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('others');
 });
 
+Route::get('/statistics', function () {
+    return Inertia::render('Statistics');
+})->name('statistics');
+
 Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
 
 Route::post('/tickets', [TicketController::class, 'store'])
@@ -91,12 +95,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $admin = auth()->user();
         if ($admin && $admin->role === 'admin') {
             DB::table('admin_logs')->insert([
-                'admin_id' => $admin->id,
+                'user_id' => $admin->id,
                 'action' => 'change_password',
-                'target_type' => 'user',
-                'target_id' => $user->id,
-                'details' => json_encode(['user_email' => $user->email]),
-                'ip_address' => $request->ip(),
+                'description' => 'Changed password for user ' . $user->email,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -115,12 +116,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $admin = auth()->user();
         if ($admin && $admin->role === 'admin') {
             DB::table('admin_logs')->insert([
-                'admin_id' => $admin->id,
+                'user_id' => $admin->id,
                 'action' => 'change_role',
-                'target_type' => 'user',
-                'target_id' => $user->id,
-                'details' => json_encode(['user_email' => $user->email, 'new_role' => $user->role]),
-                'ip_address' => $request->ip(),
+                'description' => 'Changed role for user ' . $user->email . ' to ' . $user->role,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

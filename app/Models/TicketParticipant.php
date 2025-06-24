@@ -6,9 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class TicketParticipant extends Model
 {
-    protected $connection = 'tickets';
     protected $table = 'ticket_participants';
-    protected $fillable = ['ticket_id', 'username', 'role'];
+    protected $fillable = ['ticket_id', 'user_id', 'role'];
 
     public function ticket()
     {

@@ -6,12 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class TicketMessage extends Model
 {
-    protected $connection = 'tickets';
     protected $table = 'ticket_messages';
-    protected $fillable = ['ticket_id', 'sender', 'message'];
+    protected $fillable = ['ticket_id', 'user_id', 'message'];
 
     public function ticket()
     {
         return $this->belongsTo(Ticket::class, 'ticket_id', 'id');
     }
 }
+ 
