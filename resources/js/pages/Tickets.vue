@@ -13,7 +13,7 @@
                         </p>
                     </div>
                     <button type="button" @click="showCreateModal = true"
-                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg">
                         Vytvořit Ticket
                     </button>
                 </div>
@@ -139,8 +139,18 @@
                 <!-- Tickets Table -->
                 <div
                     class="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
+                    <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700 flex justify-between items-center">
                         <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">Tickets</h2>
+                        <div class="flex gap-2" v-if="selectedTickets.length > 0">
+                            <button @click="massComplete" 
+                                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg">
+                                Označit jako vyřešené
+                            </button>
+                            <button @click="massDelete" 
+                                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg">
+                                Smazat
+                            </button>
+                        </div>
                     </div>
 
                     <div class="overflow-x-auto">
@@ -226,42 +236,42 @@
                     <div
                         class="px-6 py-4 border-t border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
                         <div class="text-sm text-neutral-600 dark:text-neutral-300">
-                            Zobrazeno
-                            {{ tickets.value?.from || 0 }} - {{ tickets.value?.to || 0 }}
-                            z {{ tickets.value?.total || 0 }} tickets
+                            Zobrazeno {{ tickets.value?.from || 0 }} - {{ tickets.value?.to || 0 }} z {{ tickets.value?.total || 0 }} tickets
                         </div>
                         <div class="flex space-x-2">
-                            <button :disabled="tickets.value.current_page === 1"
-                                @click="$inertia.visit(`?page=${tickets.value.current_page - 1}`)"
-                                class="px-3 py-1 border border-neutral-300 dark:border-neutral-600 rounded text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                            <button 
+                                :disabled="!tickets.value?.prev_page_url"
+                                @click="$inertia.visit(tickets.value?.prev_page_url || '')"
+                                class="px-3 py-1 border border-neutral-300 dark:border-neutral-600 rounded text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:opacity-50">
                                 Předchozí
                             </button>
-                            <button v-for="page in tickets.value.last_page" :key="page"
-                                :class="['px-3 py-1 rounded text-sm', page === tickets.value.current_page ? 'bg-blue-600 text-white' : 'border border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700']"
-                                @click="$inertia.visit(`?page=${page}`)">
-                                {{ page }}
+                            <button 
+                                v-for="page in tickets.value?.links?.slice(1, -1)" 
+                                :key="page.label"
+                                :class="[
+                                    'px-3 py-1 rounded text-sm',
+                                    page.active 
+                                        ? 'bg-blue-600 text-white' 
+                                        : 'border border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700'
+                                ]"
+                                @click="$inertia.visit(page.url)">
+                                {{ page.label }}
                             </button>
-                            <button :disabled="tickets.value.current_page === tickets.value.last_page"
-                                @click="$inertia.visit(`?page=${tickets.value.current_page + 1}`)"
-                                class="px-3 py-1 border border-neutral-300 dark:border-neutral-600 rounded text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                            <button 
+                                :disabled="!tickets.value?.next_page_url"
+                                @click="$inertia.visit(tickets.value?.next_page_url || '')"
+                                class="px-3 py-1 border border-neutral-300 dark:border-neutral-600 rounded text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:opacity-50">
                                 Další
                             </button>
                         </div>
                     </div>
                 </div>
-
-                <!-- Mass Action Buttons -->
-                <div class="mb-4 flex gap-2" v-if="selectedTickets.length > 0">
-                    <button @click="massComplete" class="px-3 py-1 bg-green-600 text-white rounded">Označit jako
-                        vyřešené</button>
-                    <button @click="massDelete" class="px-3 py-1 bg-red-600 text-white rounded">Smazat</button>
-                </div>
             </div>
         </div>
 
         <!-- Create Ticket Modal -->
-        <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white dark:bg-neutral-800 rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-in fade-in duration-200">
+            <div class="bg-white dark:bg-neutral-800 rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
                 <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
                     <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">Vytvořit nový ticket</h3>
                 </div>
@@ -317,11 +327,45 @@
 
                 <div class="px-6 py-4 border-t border-neutral-200 dark:border-neutral-700 flex justify-end space-x-3">
                     <button @click="showCreateModal = false"
-                        class="px-4 py-2 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                        class="px-4 py-2 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-200 transform hover:scale-105 active:scale-95">
                         Zrušit
                     </button>
-                    <button @click="createTicket" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                    <button @click="createTicket" 
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg">
                         Vytvořit ticket
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmation Modal -->
+        <div v-if="showConfirmModal"
+            class="fixed inset-0 backdrop-blur-sm bg-white/30 dark:bg-neutral-900/30 flex items-center justify-center z-50 animate-in fade-in duration-200">
+            <div class="bg-white dark:bg-neutral-800 rounded-lg shadow-lg max-w-sm w-full p-6 text-center animate-in zoom-in-95 duration-200" @click.stop>
+                <h3 class="text-lg font-semibold mb-4 text-neutral-900 dark:text-white">Potvrzení Akce</h3>
+                <p class="mb-6 text-neutral-700 dark:text-neutral-300">
+                    Opravdu chcete
+                    <span class="font-bold" :class="{
+                        'text-green-600 dark:text-green-400': actionToConfirm === 'complete',
+                        'text-red-600 dark:text-red-400': actionToConfirm === 'delete'
+                    }">
+                        {{ actionToConfirm === 'complete' ? 'vyřešit' : 'smazat' }}
+                    </span>
+                    vybrané tickety?
+                </p>
+                <div class="flex justify-center gap-6">
+                    <button @click="confirmAction"
+                        :class="[
+                            'px-4 py-2 text-white rounded-md font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg',
+                            actionToConfirm === 'complete' 
+                                ? 'bg-green-600 hover:bg-green-700' 
+                                : 'bg-red-600 hover:bg-red-700'
+                        ]">
+                        Potvrdit
+                    </button>
+                    <button @click="cancelAction"
+                        class="px-4 py-2 bg-neutral-600 hover:bg-neutral-500 text-white rounded-md font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg">
+                        Zrušit
                     </button>
                 </div>
             </div>
@@ -342,6 +386,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const showCreateModal = ref(false);
+const showConfirmModal = ref(false);
+const actionToConfirm = ref<'complete' | 'delete' | null>(null);
 const selectedStatus = ref('');
 const selectedPriority = ref('');
 const selectedCategory = ref('');
@@ -360,7 +406,7 @@ const userRole = props.userRole;
 const tickets = ref(props.tickets);
 
 const filteredTickets = computed(() => {
-    if (!tickets.value || !Array.isArray(tickets.value.data)) return [];
+    if (!tickets.value || !tickets.value.data) return [];
     return tickets.value.data.filter(ticket => {
         const matchesStatus = !selectedStatus.value || ticket.status === selectedStatus.value;
         const matchesPriority = !selectedPriority.value || ticket.priority === selectedPriority.value;
@@ -476,15 +522,36 @@ const toggleSelectAll = () => {
 };
 
 const massComplete = async () => {
-    if (!confirm('Opravdu označit vybrané tickety jako vyřešené?')) return;
-    await axios.post('/tickets/mass-complete', { ids: selectedTickets.value });
-    window.location.reload();
+    actionToConfirm.value = 'complete';
+    showConfirmModal.value = true;
 };
 
 const massDelete = async () => {
-    if (!confirm('Opravdu smazat vybrané tickety?')) return;
-    await axios.post('/tickets/mass-delete', { ids: selectedTickets.value });
-    window.location.reload();
+    actionToConfirm.value = 'delete';
+    showConfirmModal.value = true;
+};
+
+const confirmAction = async () => {
+    if (!actionToConfirm.value) return;
+
+    try {
+        if (actionToConfirm.value === 'complete') {
+            await axios.post('/tickets/mass-complete', { ids: selectedTickets.value });
+        } else if (actionToConfirm.value === 'delete') {
+            await axios.post('/tickets/mass-delete', { ids: selectedTickets.value });
+        }
+        window.location.reload();
+    } catch (e) {
+        alert(`Nepodařilo se ${actionToConfirm.value === 'complete' ? 'vyřešit' : 'smazat'} vybrané tickety.`);
+    } finally {
+        showConfirmModal.value = false;
+        actionToConfirm.value = null;
+    }
+};
+
+const cancelAction = () => {
+    showConfirmModal.value = false;
+    actionToConfirm.value = null;
 };
 
 onMounted(() => {

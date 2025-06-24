@@ -102,14 +102,6 @@
                                     <div class="flex justify-between items-center">
                                         <div class="flex items-center gap-4">
                                             <label class="flex items-center">
-                                                <input type="checkbox" v-model="markAsResolved"
-                                                    class="rounded border-neutral-300 dark:border-neutral-600 text-blue-600 focus:ring-blue-500">
-                                                <span class="ml-2 text-sm text-neutral-700 dark:text-neutral-300">
-                                                    Označit jako vyřešené
-                                                </span>
-                                            </label>
-
-                                            <label class="flex items-center">
                                                 <input type="checkbox" v-model="notifyUser"
                                                     class="rounded border-neutral-300 dark:border-neutral-600 text-blue-600 focus:ring-blue-500">
                                                 <span class="ml-2 text-sm text-neutral-700 dark:text-neutral-300">
@@ -130,6 +122,36 @@
 
                     <!-- Sidebar -->
                     <div class="space-y-6">
+                        <!-- User Info - Now first in sidebar -->
+                        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
+                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-white mb-4">Informace o uživateli</h3>
+
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-3">
+                                    <img :src="userData.avatarUrl" :alt="userData.username" 
+                                        class="w-10 h-10 rounded-lg bg-neutral-200 dark:bg-neutral-700" />
+                                    <div>
+                                        <p class="font-medium text-neutral-900 dark:text-white">{{ userData.username }}</p>
+                                        <p class="text-sm text-neutral-500 dark:text-neutral-400">Hráč</p>
+                                    </div>
+                                </div>
+
+                                <div class="pt-3 border-t border-neutral-200 dark:border-neutral-700 space-y-2">
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-neutral-600 dark:text-neutral-300">Celkem ticketů:</span>
+                                        <span class="text-neutral-900 dark:text-white">{{ userData.ticketCount }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="pt-3 border-t border-neutral-200 dark:border-neutral-700">
+                                    <button
+                                        class="w-full px-3 py-2 text-sm bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-all duration-200">
+                                        Zobrazit profil
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Ticket Info -->
                         <div
                             class="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
@@ -160,63 +182,6 @@
                                         <option value="other">Ostatní</option>
                                     </select>
                                 </div>
-
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Přiřazeno</label>
-                                    <select v-model="ticket.assignedTo" @change="updateAssignee"
-                                        class="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white px-3 py-2">
-                                        <option value="">Nepřiřazeno</option>
-                                        <option value="admin1">Admin</option>
-                                        <option value="mod1">Moderátor</option>
-                                        <option value="support1">Support</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- User Info -->
-                        <div
-                            class="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
-                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-white mb-4">Informace o
-                                uživateli</h3>
-
-                            <div class="space-y-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="font-medium text-neutral-900 dark:text-white">{{ ticket.user }}</p>
-                                        <p class="text-sm text-neutral-500 dark:text-neutral-400">Hráč</p>
-                                    </div>
-                                </div>
-
-                                <div class="pt-3 border-t border-neutral-200 dark:border-neutral-700 space-y-2">
-                                    <div class="flex justify-between text-sm">
-                                        <span class="text-neutral-600 dark:text-neutral-300">Registrován:</span>
-                                        <span class="text-neutral-900 dark:text-white">2024-01-15</span>
-                                    </div>
-                                    <div class="flex justify-between text-sm">
-                                        <span class="text-neutral-600 dark:text-neutral-300">Poslední aktivita:</span>
-                                        <span class="text-neutral-900 dark:text-white">Dnes</span>
-                                    </div>
-                                    <div class="flex justify-between text-sm">
-                                        <span class="text-neutral-600 dark:text-neutral-300">Celkem ticketů:</span>
-                                        <span class="text-neutral-900 dark:text-white">3</span>
-                                    </div>
-                                </div>
-
-                                <div class="pt-3 border-t border-neutral-200 dark:border-neutral-700">
-                                    <button
-                                        class="w-full px-3 py-2 text-sm bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600">
-                                        Zobrazit profil
-                                    </button>
-                                </div>
                             </div>
                         </div>
 
@@ -226,17 +191,13 @@
                             <h3 class="text-lg font-semibold text-neutral-900 dark:text-white mb-4">Rychlé akce</h3>
 
                             <div class="space-y-2">
-                                <button
-                                    class="w-full px-3 py-2 text-sm bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50">
+                                <button @click="resolveTicket"
+                                    class="w-full px-3 py-2 text-sm bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-all duration-200">
                                     Označit jako vyřešené
                                 </button>
-                                <button
-                                    class="w-full px-3 py-2 text-sm bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-900/50">
-                                    Eskalovat
-                                </button>
-                                <button
-                                    class="w-full px-3 py-2 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50">
-                                    Uzavřít ticket
+                                <button @click="deleteTicket"
+                                    class="w-full px-3 py-2 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-all duration-200">
+                                    Smazat ticket
                                 </button>
                             </div>
                         </div>
@@ -245,6 +206,39 @@
             </div>
         </div>
     </AppLayout>
+
+    <!-- Confirmation Modal -->
+    <div v-if="showConfirmModal"
+        class="fixed inset-0 backdrop-blur-sm bg-white/30 dark:bg-neutral-900/30 flex items-center justify-center z-50 animate-in fade-in duration-200">
+        <div class="bg-white dark:bg-neutral-800 rounded-lg shadow-lg max-w-sm w-full p-6 text-center animate-in zoom-in-95 duration-200" @click.stop>
+            <h3 class="text-lg font-semibold mb-4 text-neutral-900 dark:text-white">Potvrzení Akce</h3>
+            <p class="mb-6 text-neutral-700 dark:text-neutral-300">
+                Opravdu chcete
+                <span class="font-bold" :class="{
+                    'text-green-600 dark:text-green-400': actionToConfirm === 'resolve',
+                    'text-red-600 dark:text-red-400': actionToConfirm === 'delete'
+                }">
+                    {{ actionToConfirm === 'resolve' ? 'vyřešit' : 'smazat' }}
+                </span>
+                tento ticket?
+            </p>
+            <div class="flex justify-center gap-6">
+                <button @click="confirmAction"
+                    :class="[
+                        'px-4 py-2 text-white rounded-md font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg',
+                        actionToConfirm === 'resolve' 
+                            ? 'bg-green-600 hover:bg-green-700' 
+                            : 'bg-red-600 hover:bg-red-700'
+                    ]">
+                    Potvrdit
+                </button>
+                <button @click="cancelAction"
+                    class="px-4 py-2 bg-neutral-600 hover:bg-neutral-500 text-white rounded-md font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg">
+                    Zrušit
+                </button>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -260,10 +254,16 @@ const props = defineProps<{
     id: string,
     ticket: any,
     messages: any[],
+    userData: {
+        username: string,
+        ticketCount: number,
+        avatarUrl: string,
+    }
 }>();
 
 const ticket = ref(props.ticket);
 const messages = ref(props.messages);
+const userData = ref(props.userData);
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -273,8 +273,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const messagesContainer = ref<HTMLElement>();
 const replyText = ref('');
-const markAsResolved = ref(false);
 const notifyUser = ref(true);
+
+const showConfirmModal = ref(false);
+const actionToConfirm = ref<'resolve' | 'delete' | null>(null);
 
 const scrollToBottom = () => {
     nextTick(() => {
@@ -282,6 +284,41 @@ const scrollToBottom = () => {
             messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
         }
     });
+};
+
+const resolveTicket = () => {
+    actionToConfirm.value = 'resolve';
+    showConfirmModal.value = true;
+};
+
+const deleteTicket = () => {
+    actionToConfirm.value = 'delete';
+    showConfirmModal.value = true;
+};
+
+const confirmAction = async () => {
+    if (!actionToConfirm.value) return;
+
+    try {
+        if (actionToConfirm.value === 'resolve') {
+            await axios.patch(`/tickets/${ticket.value.id}/status`, { status: 'resolved' });
+            ticket.value.status = 'resolved';
+        } else if (actionToConfirm.value === 'delete') {
+            await axios.delete(`/tickets/${ticket.value.id}`);
+            window.location.href = '/tickets';
+            return;
+        }
+    } catch (e) {
+        alert(`Nepodařilo se ${actionToConfirm.value === 'resolve' ? 'vyřešit' : 'smazat'} ticket.`);
+    } finally {
+        showConfirmModal.value = false;
+        actionToConfirm.value = null;
+    }
+};
+
+const cancelAction = () => {
+    showConfirmModal.value = false;
+    actionToConfirm.value = null;
 };
 
 const sendReply = async () => {
@@ -297,7 +334,6 @@ const sendReply = async () => {
             },
             body: JSON.stringify({
                 message: replyText.value,
-                markAsResolved: markAsResolved.value,
             }),
         });
 
@@ -313,13 +349,7 @@ const sendReply = async () => {
             isAdmin: data.isAdmin,
         });
 
-        // Update ticket status if changed
-        if (data.status && ticket.value.status !== data.status) {
-            ticket.value.status = data.status;
-        }
-
         replyText.value = '';
-        markAsResolved.value = false;
         scrollToBottom();
     } catch (e) {
         alert('Odpověď se nepodařilo odeslat.');
@@ -345,11 +375,6 @@ const updatePriority = async () => {
 const updateCategory = () => {
     // API call to update category
     console.log('Category updated:', ticket.value.category);
-};
-
-const updateAssignee = () => {
-    // API call to update assignee
-    console.log('Assignee updated:', ticket.value.assignedTo);
 };
 
 const getStatusClass = (status: string) => {

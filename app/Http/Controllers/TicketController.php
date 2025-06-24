@@ -55,6 +55,9 @@ class TicketController extends Controller
             abort(403, 'Unauthorized');
         }
 
+        // Get ticket count for the ticket owner
+        $userTicketCount = Ticket::where('username', $ticket->username)->count();
+
         // Format messages for the frontend
         $messages = $ticket->messages->map(function ($msg) use ($ticket) {
             return [
@@ -75,9 +78,14 @@ class TicketController extends Controller
                 'priority' => $ticket->priority,
                 'category' => $ticket->category,
                 'status' => $ticket->status,
-                'assignedTo' => '',
+                'created' => $ticket->created_at->format('Y-m-d'),
             ],
             'messages' => $messages,
+            'userData' => [
+                'username' => $ticket->username,
+                'ticketCount' => $userTicketCount,
+                'avatarUrl' => "https://mc-heads.net/avatar/" . urlencode($ticket->username) . "/100",
+            ],
         ]);
     }
 

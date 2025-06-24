@@ -19,7 +19,7 @@ Route::get('dashboard', function () {
 
 Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
 
-Route::post('/tickets', [TicketController::class, 'store'])
+Route::post('/tickets', [TicketController::class, 'stNiceore'])
     ->middleware(['auth', 'verified'])
     ->name('tickets.store');
 
