@@ -152,6 +152,41 @@
                             </div>
                         </div>
 
+                        <!-- Participants Section - Add after User Info card -->
+                        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">Účastníci</h3>
+                                <button v-if="canManageParticipants" @click="showAddParticipantModal = true"
+                                    class="text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors">
+                                    Přidat
+                                </button>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div v-for="participant in participants" :key="participant.username" 
+                                    class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <img :src="participant.avatarUrl" :alt="participant.username"
+                                            class="w-8 h-8 rounded-lg bg-neutral-200 dark:bg-neutral-700" />
+                                        <div>
+                                            <p class="font-medium text-neutral-900 dark:text-white">
+                                                {{ participant.username }}
+                                                <span v-if="participant.role === 'owner'" 
+                                                    class="ml-2 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded">
+                                                    Vlastník
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button v-if="canManageParticipants && participant.role !== 'owner'"
+                                        @click="askRemoveParticipant(participant.username)"
+                                        class="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">
+                                        Odebrat
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Ticket Info -->
                         <div
                             class="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
@@ -239,6 +274,56 @@
             </div>
         </div>
     </div>
+
+    <!-- Add Participant Modal -->
+    <div v-if="showAddParticipantModal"
+        class="fixed inset-0 backdrop-blur-sm bg-white/30 dark:bg-neutral-900/30 flex items-center justify-center z-50 animate-in fade-in duration-200">
+        <div class="bg-white dark:bg-neutral-800 rounded-lg shadow-lg max-w-sm w-full p-6 animate-in zoom-in-95 duration-200">
+            <h3 class="text-lg font-semibold mb-4 text-neutral-900 dark:text-white">Přidat účastníka</h3>
+            
+            <form @submit.prevent="addParticipant">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                        Uživatelské jméno
+                    </label>
+                    <input v-model="newParticipantUsername" type="text" required
+                        class="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white px-3 py-2">
+                </div>
+
+                <div class="flex justify-end gap-3">
+                    <button type="button" @click="showAddParticipantModal = false"
+                        class="px-4 py-2 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                        Zrušit
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                        Přidat
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Remove Participant Modal -->
+    <div v-if="showRemoveParticipantModal"
+        class="fixed inset-0 backdrop-blur-sm bg-white/30 dark:bg-neutral-900/30 flex items-center justify-center z-50 animate-in fade-in duration-200">
+        <div class="bg-white dark:bg-neutral-800 rounded-lg shadow-lg max-w-sm w-full p-6 animate-in zoom-in-95 duration-200">
+            <h3 class="text-lg font-semibold mb-4 text-neutral-900 dark:text-white">Potvrzení odebrání</h3>
+            <p class="mb-6 text-neutral-700 dark:text-neutral-300">
+                Opravdu chcete odebrat uživatele <span class="font-bold">{{ participantToRemove }}</span> z ticketu?
+            </p>
+            <div class="flex justify-center gap-6">
+                <button @click="confirmRemoveParticipant"
+                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md font-semibold transition-all duration-200">
+                    Potvrdit
+                </button>
+                <button @click="showRemoveParticipantModal = false"
+                    class="px-4 py-2 bg-neutral-600 hover:bg-neutral-500 text-white rounded-md font-semibold transition-all duration-200">
+                    Zrušit
+                </button>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -254,16 +339,19 @@ const props = defineProps<{
     id: string,
     ticket: any,
     messages: any[],
+    participants: any[],
     userData: {
         username: string,
         ticketCount: number,
         avatarUrl: string,
-    }
+    },
+    canManageParticipants: boolean
 }>();
 
 const ticket = ref(props.ticket);
 const messages = ref(props.messages);
 const userData = ref(props.userData);
+const participants = ref(props.participants);
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -277,6 +365,10 @@ const notifyUser = ref(true);
 
 const showConfirmModal = ref(false);
 const actionToConfirm = ref<'resolve' | 'delete' | null>(null);
+const showAddParticipantModal = ref(false);
+const newParticipantUsername = ref('');
+const showRemoveParticipantModal = ref(false);
+const participantToRemove = ref(null);
 
 const scrollToBottom = () => {
     nextTick(() => {
@@ -434,6 +526,42 @@ const getAvatarUrl = (message: any) => {
     }
     // Use MCHeads API, 40px size, no helm
     return `https://mc-heads.net/avatar/${encodeURIComponent(message.author)}/40`;
+};
+
+const addParticipant = async () => {
+    if (!newParticipantUsername.value.trim()) return;
+
+    try {
+        await axios.post(`/tickets/${ticket.value.id}/participants`, {
+            username: newParticipantUsername.value
+        });
+        window.location.reload();
+    } catch (e) {
+        alert('Nepodařilo se přidat účastníka.');
+    } finally {
+        showAddParticipantModal.value = false;
+        newParticipantUsername.value = '';
+    }
+};
+
+const askRemoveParticipant = (username) => {
+    participantToRemove.value = username;
+    showRemoveParticipantModal.value = true;
+};
+
+const confirmRemoveParticipant = async () => {
+    if (!participantToRemove.value) return;
+    try {
+        await axios.delete(`/tickets/${ticket.value.id}/participants`, {
+            data: { username: participantToRemove.value }
+        });
+        window.location.reload();
+    } catch (e) {
+        alert('Nepodařilo se odebrat účastníka.');
+    } finally {
+        showRemoveParticipantModal.value = false;
+        participantToRemove.value = null;
+    }
 };
 
 onMounted(() => {

@@ -317,6 +317,25 @@
                         </div>
                     </div>
 
+                    <div v-if="userRole === 'admin' || newTicket.participants.length > 0" class="space-y-3">
+                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Účastníci</label>
+                        <div v-for="(participant, index) in newTicket.participants" :key="index" class="flex gap-2">
+                            <input v-model="newTicket.participants[index]" type="text"
+                                class="flex-1 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white px-3 py-2"
+                                placeholder="Uživatelské jméno">
+                            <button type="button" @click="removeParticipantField(index)"
+                                class="px-3 py-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <button type="button" @click="addParticipantField"
+                            class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                            + Přidat dalšího účastníka
+                        </button>
+                    </div>
+
                     <div>
                         <label
                             class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Popis</label>
@@ -398,7 +417,8 @@ const newTicket = ref({
     user: '',
     priority: 'medium',
     category: 'technical',
-    description: ''
+    description: '',
+    participants: [] as string[]
 });
 
 const props = defineProps<{ tickets: any, userRole: string }>();
@@ -491,6 +511,7 @@ const createTicket = async () => {
             priority: newTicket.value.priority,
             category: newTicket.value.category,
             description: newTicket.value.description,
+            participants: newTicket.value.participants.filter(p => p.trim()),
         };
         if (userRole === 'admin') {
             payload.user = newTicket.value.user;
@@ -502,7 +523,8 @@ const createTicket = async () => {
             user: '',
             priority: 'medium',
             category: 'technical',
-            description: ''
+            description: '',
+            participants: []
         };
         window.location.reload();
     } catch (e) {
@@ -552,6 +574,14 @@ const confirmAction = async () => {
 const cancelAction = () => {
     showConfirmModal.value = false;
     actionToConfirm.value = null;
+};
+
+const addParticipantField = () => {
+    newTicket.value.participants.push('');
+};
+
+const removeParticipantField = (index: number) => {
+    newTicket.value.participants.splice(index, 1);
 };
 
 onMounted(() => {

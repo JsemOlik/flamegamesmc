@@ -19,7 +19,7 @@ Route::get('dashboard', function () {
 
 Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
 
-Route::post('/tickets', [TicketController::class, 'stNiceore'])
+Route::post('/tickets', [TicketController::class, 'store'])
     ->middleware(['auth', 'verified'])
     ->name('tickets.store');
 
@@ -78,6 +78,11 @@ Route::post('/api/servers/{id}/vypnout', [ServerControlController::class, 'stop'
 Route::post('/api/servers/{id}/restartovat', [ServerControlController::class, 'restart']);
 Route::patch('/tickets/{id}/status', [TicketController::class, 'updateStatus'])->middleware(['auth', 'verified']);
 Route::patch('/tickets/{id}/priority', [TicketController::class, 'updatePriority'])->middleware(['auth', 'verified']);
+
+Route::post('/tickets/{id}/participants', [TicketController::class, 'addParticipant'])
+    ->middleware(['auth', 'verified']);
+Route::delete('/tickets/{id}/participants', [TicketController::class, 'removeParticipant'])
+    ->middleware(['auth', 'verified']);
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
