@@ -80,7 +80,7 @@ class TicketController extends Controller
             return [
                 'username' => $participant->username,
                 'role' => $participant->role,
-                'avatarUrl' => "https://mc-heads.net/avatar/" . urlencode($participant->username) . "/100",
+                'avatarUrl' => "https://mc-heads.net/avatar/" . urlencode($participant->username) . "/40",
             ];
         });
 
@@ -100,7 +100,7 @@ class TicketController extends Controller
             'userData' => [
                 'username' => $ticket->owner->username,
                 'ticketCount' => $userTicketCount,
-                'avatarUrl' => "https://mc-heads.net/avatar/" . urlencode($ticket->owner->username) . "/100",
+                'avatarUrl' => "https://mc-heads.net/avatar/" . urlencode($ticket->owner->username) . "/40",
             ],
             'canManageParticipants' => $user->role === 'admin' || $ticket->owner->username === $user->name,
         ]);

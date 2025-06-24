@@ -23,17 +23,22 @@ Route::post('/tickets', [TicketController::class, 'store'])
     ->middleware(['auth', 'verified'])
     ->name('tickets.store');
 
-Route::get('/tickets/{id}', [TicketController::class, 'show'])
-    ->middleware(['auth', 'verified'])
-    ->name('tickets.reply');
-
-Route::post('/tickets/{id}/reply', [TicketController::class, 'reply'])
-    ->middleware(['auth', 'verified']);
-
-Route::post('/tickets/mass-complete', [TicketController::class, 'massComplete'])
-    ->middleware(['auth', 'verified']);
-Route::post('/tickets/mass-delete', [TicketController::class, 'massDelete'])
-    ->middleware(['auth', 'verified']);
+// Group all ticket-specific routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Ticket detail routes
+    Route::get('/tickets/{id}', [TicketController::class, 'show'])->name('tickets.reply');
+    Route::post('/tickets/{id}/reply', [TicketController::class, 'reply']);
+    Route::patch('/tickets/{id}/status', [TicketController::class, 'updateStatus']);
+    Route::patch('/tickets/{id}/priority', [TicketController::class, 'updatePriority']);
+    
+    // Participant management routes
+    Route::post('/tickets/{id}/participants', [TicketController::class, 'addParticipant']);
+    Route::delete('/tickets/{id}/participants', [TicketController::class, 'removeParticipant']);
+    
+    // Bulk actions
+    Route::post('/tickets/mass-complete', [TicketController::class, 'massComplete']);
+    Route::post('/tickets/mass-delete', [TicketController::class, 'massDelete']);
+});
 
 Route::get('/users', function () {
     return Inertia::render('Users');
@@ -76,13 +81,6 @@ Route::get('/api/servers/status', [ServerStatusController::class, 'index']);
 Route::post('/api/servers/{id}/zapnout', [ServerControlController::class, 'start']);
 Route::post('/api/servers/{id}/vypnout', [ServerControlController::class, 'stop']);
 Route::post('/api/servers/{id}/restartovat', [ServerControlController::class, 'restart']);
-Route::patch('/tickets/{id}/status', [TicketController::class, 'updateStatus'])->middleware(['auth', 'verified']);
-Route::patch('/tickets/{id}/priority', [TicketController::class, 'updatePriority'])->middleware(['auth', 'verified']);
-
-Route::post('/tickets/{id}/participants', [TicketController::class, 'addParticipant'])
-    ->middleware(['auth', 'verified']);
-Route::delete('/tickets/{id}/participants', [TicketController::class, 'removeParticipant'])
-    ->middleware(['auth', 'verified']);
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

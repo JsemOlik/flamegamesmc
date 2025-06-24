@@ -552,13 +552,17 @@ const askRemoveParticipant = (username) => {
 const confirmRemoveParticipant = async () => {
     if (!participantToRemove.value) return;
     try {
-        await axios.delete(`/tickets/${ticket.value.id}/participants`, {
+        const response = await axios({
+            method: 'delete',
+            url: `/tickets/${props.id}/participants`,
             data: { username: participantToRemove.value }
         });
-        window.location.reload();
+        // Remove the participant from the local state
+        participants.value = participants.value.filter(p => p.username !== participantToRemove.value);
+        showRemoveParticipantModal.value = false;
+        participantToRemove.value = null;
     } catch (e) {
         alert('Nepodařilo se odebrat účastníka.');
-    } finally {
         showRemoveParticipantModal.value = false;
         participantToRemove.value = null;
     }
