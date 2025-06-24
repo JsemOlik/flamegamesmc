@@ -35,6 +35,7 @@ const user = page.props.auth.user as User;
 const form = useForm({
     name: user.name,
     email: user.email,
+    code: '',
 });
 
 const submit = () => {
@@ -55,7 +56,7 @@ const submit = () => {
 
                 <form @submit.prevent="submit" class="space-y-6">
                     <div class="grid gap-2">
-                        <Label for="name">Jméno</Label>
+                        <Label for="name">MC Uživatelské Jméno</Label>
                         <Input id="name" class="mt-1 block w-full" v-model="form.name" required autocomplete="name"
                             placeholder="Celé jméno" />
                         <InputError class="mt-2" :message="form.errors.name" />
@@ -63,9 +64,16 @@ const submit = () => {
 
                     <div class="grid gap-2">
                         <Label for="email">Emailová adresa</Label>
-                        <Input id="email" type="email" class="mt-1 block w-full" v-model="form.email" required
+                        <Input id="email" type="email" class="mt-1 block w-full" v-model="form.email"
                             autocomplete="username" placeholder="Emailová adresa" />
                         <InputError class="mt-2" :message="form.errors.email" />
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="code">Login kód</Label>
+                        <Input id="code" type="text" class="mt-1 block w-full" v-model="form.code"
+                            autocomplete="one-time-code" placeholder="Login kód" />
+                        <InputError class="mt-2" :message="form.errors.code" />
                     </div>
 
                     <div v-if="mustVerifyEmail && !user.email_verified_at">

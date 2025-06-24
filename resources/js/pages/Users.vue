@@ -33,6 +33,7 @@
                                         </span>
                                     </div>
                                     <div class="text-sm text-neutral-500 dark:text-neutral-300 truncate">{{ user.email }}</div>
+                                    <div class="text-xs text-neutral-400 dark:text-neutral-500 mt-1">Login kód: <span class="font-mono">{{ user.code || '—' }}</span></div>
                                 </div>
                                 <div class="text-xs text-neutral-400 dark:text-neutral-500 text-right min-w-[100px]">
                                     Registrován: <span class="font-medium text-neutral-700 dark:text-neutral-200">{{ user.created_at }}</span>
@@ -54,6 +55,7 @@
                             </div>
                             <h2 class="text-2xl font-bold text-neutral-900 dark:text-white mb-1">{{ selectedUser?.name }}</h2>
                             <div class="text-sm text-neutral-500 dark:text-neutral-300 mb-2">{{ selectedUser?.email }}</div>
+                            <div class="text-xs text-neutral-400 dark:text-neutral-500 mb-2">Login kód: <span class="font-mono">{{ selectedUser?.code || '—' }}</span></div>
                             <span :class="selectedUser?.role === 'admin' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'" class="px-2 py-1 text-xs font-medium rounded-full mb-2">
                                 {{ selectedUser?.role === 'admin' ? 'Admin' : 'Hráč' }}
                             </span>
