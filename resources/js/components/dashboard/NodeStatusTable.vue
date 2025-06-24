@@ -25,11 +25,8 @@
                             Paměť</th>
                     </tr>
                 </thead>
-                <div v-if="loading" class="p-4 text-center w-full text-neutral-700 dark:text-neutral-300">
-                    Načítání serverů...
-                </div>
-                <tbody v-else class="bg-white dark:bg-neutral-900 divide-y divide-neutral-200 dark:divide-neutral-700">
-                    <tr v-for="node in nodes" :key="node.name" class="hover:bg-neutral-50 dark:hover:bg-neutral-800">
+                <tbody class="bg-white dark:bg-neutral-900 divide-y divide-neutral-200 dark:divide-neutral-700">
+                    <tr v-for="node in props.nodes" :key="node.id || node.name" class="hover:bg-neutral-50 dark:hover:bg-neutral-800">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-medium text-neutral-900 dark:text-white">{{ node.name }}</div>
                         </td>
@@ -56,12 +53,9 @@
                                 Offline
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-white">{{ node.players
-                            }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-white">{{ node.tps }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-white">{{ node.ram }}
-                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-white">{{ node.players }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-white">{{ node.tps }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-white">{{ node.ram }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -70,32 +64,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import { defineProps } from 'vue'
 
-const loading = ref(true)
-
-const nodes = ref<Array<{
-    name: string
-    online: boolean
-    players: number
-    tps: number
-    ram: string
-    status: string
-}>>([])
-
-onMounted(async () => {
-    loading.value = true
-    try {
-        const res = await axios.get('/api/servers/status')
-        nodes.value = res.data
-    } catch (error) {
-        console.error('Failed to load server status:', error)
-    } finally {
-        loading.value = false
-    }
-})
-
+const props = defineProps<{
+    nodes: Array<{
+        name: string
+        online: boolean
+        players: number
+        tps: number
+        ram: string
+        status: string
+    }>
+}>()
 </script>
 
 <style scoped>

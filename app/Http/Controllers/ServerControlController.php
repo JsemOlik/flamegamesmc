@@ -26,25 +26,24 @@ class ServerControlController extends Controller
             'signal' => $action, // start, stop, restart
         ]);
 
-        if (!$response->ok()) {
-            return response()->json(['error' => 'Failed to send power action'], 500);
+        if (!in_array($response->status(), [200, 204])) {
+            // Log the response for debugging
+            \Log::error('Pterodactyl power action failed', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            return response()->json(['error' => 'Failed to send power action', 'details' => $response->body()], 500);
         }
 
         return response()->json(['message' => ucfirst($action) . ' signal sent']);
     }
 
-    public function start($id)
+    public function power($id, Request $request)
     {
-        return $this->sendPowerAction($id, 'start');
-    }
-
-    public function stop($id)
-    {
-        return $this->sendPowerAction($id, 'stop');
-    }
-
-    public function restart($id)
-    {
-        return $this->sendPowerAction($id, 'restart');
+        $signal = $request->input('signal');
+        if (!in_array($signal, ['start', 'stop', 'restart', 'kill'])) {
+            return response()->json(['error' => 'Invalid signal'], 400);
+        }
+        return $this->sendPowerAction($id, $signal);
     }
 }

@@ -11,7 +11,7 @@
                     </p>
                 </div>
 
-                <NetworkStats :networkStats="networkStats" :loading="loading" />
+                <NetworkStats :networkStats="networkStats" />
 
                 <NodeStatusTable :nodes="nodes" />
 
@@ -40,13 +40,12 @@ import PlayerActivity from '@/components/dashboard/PlayerActivity.vue';
 import QuickActions from '@/components/dashboard/QuickActions.vue';
 import RecentLogs from '@/components/dashboard/RecentLogs.vue';
 import AdminActions from '@/components/dashboard/AdminActions.vue';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
+import axios from 'axios';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
 ];
-
-const loading = ref(true);
 
 const networkStats = ref({
     totalServers: 0,
@@ -55,28 +54,42 @@ const networkStats = ref({
     peakPlayers: 0,
 });
 
+const nodes = ref<Array<any>>([]);
+
+let pollInterval: any = null;
 onMounted(async () => {
-    loading.value = true;
-    try {
-        const res = await fetch('/api/servers/status');
-        const servers = await res.json();
-        networkStats.value.totalServers = servers.length;
-        networkStats.value.onlineServers = servers.filter(s => s.online).length;
-        // If you have player/peak data, set it here as well
-    } catch (e) {
-        // handle error
-    } finally {
-        loading.value = false;
-    }
+    await fetchStatus();
+    pollInterval = setInterval(fetchStatus, 10000);
+});
+onUnmounted(() => {
+    if (pollInterval) clearInterval(pollInterval);
 });
 
-const nodes = [
-    { name: 'Proxy-1', online: true, players: 32, tps: 19.8, ram: '2.1GB/4GB' },
-    { name: 'Lobby-1', online: true, players: 15, tps: 20.0, ram: '1.2GB/2GB' },
-    { name: 'Survival-1', online: true, players: 28, tps: 19.7, ram: '3.5GB/8GB' },
-    { name: 'Minigames-1', online: false, players: 0, tps: 0, ram: '0GB/4GB' },
-    { name: 'Skyblock-1', online: true, players: 12, tps: 19.9, ram: '2.8GB/4GB' },
-];
+async function fetchStatus() {
+    try {
+        const res = await axios.get('/api/servers/status');
+        const servers = res.data;
+        networkStats.value.totalServers = servers.length;
+        networkStats.value.onlineServers = servers.filter(s => s.online).length;
+        // Update nodes in-place for reactivity
+        if (!nodes.value.length) {
+            nodes.value = servers;
+        } else {
+            servers.forEach(newNode => {
+                const existing = nodes.value.find(n => n.id === newNode.id);
+                if (existing) {
+                    Object.assign(existing, newNode);
+                } else {
+                    nodes.value.push(newNode);
+                }
+            });
+            // Remove nodes that no longer exist
+            nodes.value = nodes.value.filter(n => servers.some(nn => nn.id === n.id));
+        }
+    } catch (e) {
+        // handle error
+    }
+}
 
 const openTickets = [
     { id: 1, subject: 'Griefing in spawn', status: 'Open', created: '2025-06-22', user: 'Steve' },

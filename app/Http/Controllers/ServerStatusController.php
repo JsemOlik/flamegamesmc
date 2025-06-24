@@ -57,6 +57,7 @@ class ServerStatusController extends Controller
 
 
             $result[] = [
+                'id' => $serverId,
                 'name' => $name,
                 'online' => $isOnline,
                 'players' => 0,
