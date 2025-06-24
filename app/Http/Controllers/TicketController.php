@@ -15,20 +15,20 @@ class TicketController extends Controller
         $this->middleware(['auth', 'verified']);
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
-
+        $perPage = 10;
         if ($user->role === 'admin') {
-            $tickets = Ticket::orderByDesc('id')->get();
+            $tickets = Ticket::orderByDesc('id')->paginate($perPage);
         } else {
             $tickets = Ticket::where('username', $user->name)
                 ->orderByDesc('id')
-                ->get();
+                ->paginate($perPage);
         }
 
-        // Map tickets to include username and created fields
-        $tickets = $tickets->map(function ($ticket) {
+        // Map tickets for frontend
+        $tickets->getCollection()->transform(function ($ticket) {
             return [
                 'id' => $ticket->id,
                 'subject' => $ticket->subject,
@@ -62,7 +62,7 @@ class TicketController extends Controller
                 'content' => $msg->message,
                 'author' => $msg->sender,
                 'timestamp' => $msg->created_at->format('Y-m-d H:i'),
-                'isAdmin' => strtolower($msg->sender) === 'admin', // Adjust as needed
+                'isAdmin' => strtolower($msg->sender) === 'admin',
             ];
         });
 
@@ -112,29 +112,96 @@ class TicketController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $user = auth()->user();
+
+        $rules = [
             'subject' => 'required|string|max:255',
             'priority' => 'required|in:low,medium,high,urgent',
             'category' => 'required|in:technical,gameplay,player_report,other',
             'description' => 'required|string',
-        ]);
+        ];
 
-        $user = auth()->user();
+        // Only require 'user' field if admin
+        if ($user->role === 'admin') {
+            $rules['user'] = 'required|string|max:255';
+        }
+
+        $request->validate($rules);
+
+        // Determine ticket owner and message sender
+        if ($user->role === 'admin') {
+            $ticketOwner = $request->input('user');
+            $messageSender = 'admin';
+        } else {
+            $ticketOwner = $user->name;
+            $messageSender = $user->name;
+        }
 
         $ticket = Ticket::create([
-            'username' => $user->name,
+            'username' => $ticketOwner,
             'subject' => $request->subject,
             'priority' => $request->priority,
             'category' => $request->category,
             'status' => 'open',
         ]);
 
-        // Optionally, create the first message as the ticket description
         $ticket->messages()->create([
-            'sender' => $user->name,
+            'sender' => $messageSender,
             'message' => $request->description,
         ]);
 
         return redirect()->route('tickets.index')->with('success', 'Ticket vytvořen!');
+    }
+
+    public function massComplete(Request $request)
+    {
+        $user = auth()->user();
+        $ids = $request->input('ids', []);
+        if ($user->role !== 'admin') {
+            // Only allow players to complete their own tickets
+            Ticket::whereIn('id', $ids)->where('username', $user->name)->update(['status' => 'resolved']);
+        } else {
+            Ticket::whereIn('id', $ids)->update(['status' => 'resolved']);
+        }
+        return response()->json(['success' => true]);
+    }
+
+    public function massDelete(Request $request)
+    {
+        $user = auth()->user();
+        $ids = $request->input('ids', []);
+        if ($user->role !== 'admin') {
+            // Only allow players to delete their own tickets
+            Ticket::whereIn('id', $ids)->where('username', $user->name)->delete();
+        } else {
+            Ticket::whereIn('id', $ids)->delete();
+        }
+        return response()->json(['success' => true]);
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $ticket = Ticket::findOrFail($id);
+        $user = auth()->user();
+        if ($user->role !== 'admin' && $ticket->username !== $user->name) {
+            abort(403, 'Unauthorized');
+        }
+        $request->validate(['status' => 'required|in:open,in_progress,resolved,closed']);
+        $ticket->status = $request->status;
+        $ticket->save();
+        return response()->json(['status' => $ticket->status]);
+    }
+
+    public function updatePriority(Request $request, $id)
+    {
+        $ticket = Ticket::findOrFail($id);
+        $user = auth()->user();
+        if ($user->role !== 'admin' && $ticket->username !== $user->name) {
+            abort(403, 'Unauthorized');
+        }
+        $request->validate(['priority' => 'required|in:low,medium,high,urgent']);
+        $ticket->priority = $request->priority;
+        $ticket->save();
+        return response()->json(['priority' => $ticket->priority]);
     }
 }

@@ -49,7 +49,8 @@
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-neutral-600 dark:text-neutral-300">V řešení</p>
-                                <p class="text-2xl font-bold text-neutral-900 dark:text-white">{{ inProgressCount }}</p>
+                                <p class="text-2xl font-bold text-neutral-900 dark:text-white">{{ inProgressCount }}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -66,7 +67,8 @@
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-neutral-600 dark:text-neutral-300">Vyřešené</p>
-                                <p class="text-2xl font-bold text-neutral-900 dark:text-white">{{ resolvedCount }}</p>
+                                <p class="text-2xl font-bold text-neutral-900 dark:text-white">{{ resolvedCount }}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -169,11 +171,13 @@
                                     <th
                                         class="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider w-32">
                                         Akce</th>
+                                    <th class="px-4 py-3 w-8">
+                                        <input type="checkbox" v-model="selectAll" @change="toggleSelectAll">
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-neutral-200 dark:divide-neutral-700">
-                                <tr v-for="ticket in filteredTickets" :key="ticket.id"
-                                    class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+                                <tr v-for="ticket in filteredTickets" :key="ticket.id">
                                     <td
                                         class="px-4 py-4 whitespace-nowrap text-sm font-medium text-neutral-900 dark:text-white">
                                         #{{ ticket.id }}</td>
@@ -205,16 +209,13 @@
                                         {{ ticket.created }}
                                     </td>
                                     <td class="px-4 py-4 whitespace-nowrap text-sm">
-                                        <div class="flex space-x-2">
-                                            <button @click="$inertia.visit(`/tickets/${ticket.id}`)"
-                                                class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
-                                                Zobrazit
-                                            </button>
-                                            <button @click="editTicket(ticket)"
-                                                class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300">
-                                                Upravit
-                                            </button>
-                                        </div>
+                                        <button @click="$inertia.visit(`/tickets/${ticket.id}`)"
+                                            class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                            Otevřít
+                                        </button>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <input type="checkbox" :value="ticket.id" v-model="selectedTickets">
                                     </td>
                                 </tr>
                             </tbody>
@@ -225,26 +226,35 @@
                     <div
                         class="px-6 py-4 border-t border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
                         <div class="text-sm text-neutral-600 dark:text-neutral-300">
-                            Zobrazeno {{ filteredTickets.length }} z {{ totalCount }} tickets
+                            Zobrazeno
+                            {{ tickets.value?.from || 0 }} - {{ tickets.value?.to || 0 }}
+                            z {{ tickets.value?.total || 0 }} tickets
                         </div>
                         <div class="flex space-x-2">
-                            <button
+                            <button :disabled="tickets.value.current_page === 1"
+                                @click="$inertia.visit(`?page=${tickets.value.current_page - 1}`)"
                                 class="px-3 py-1 border border-neutral-300 dark:border-neutral-600 rounded text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700">
                                 Předchozí
                             </button>
-                            <button class="px-3 py-1 bg-blue-600 text-white rounded text-sm">
-                                1
+                            <button v-for="page in tickets.value.last_page" :key="page"
+                                :class="['px-3 py-1 rounded text-sm', page === tickets.value.current_page ? 'bg-blue-600 text-white' : 'border border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700']"
+                                @click="$inertia.visit(`?page=${page}`)">
+                                {{ page }}
                             </button>
-                            <button
-                                class="px-3 py-1 border border-neutral-300 dark:border-neutral-600 rounded text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700">
-                                2
-                            </button>
-                            <button
+                            <button :disabled="tickets.value.current_page === tickets.value.last_page"
+                                @click="$inertia.visit(`?page=${tickets.value.current_page + 1}`)"
                                 class="px-3 py-1 border border-neutral-300 dark:border-neutral-600 rounded text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700">
                                 Další
                             </button>
                         </div>
                     </div>
+                </div>
+
+                <!-- Mass Action Buttons -->
+                <div class="mb-4 flex gap-2" v-if="selectedTickets.length > 0">
+                    <button @click="massComplete" class="px-3 py-1 bg-green-600 text-white rounded">Označit jako
+                        vyřešené</button>
+                    <button @click="massDelete" class="px-3 py-1 bg-red-600 text-white rounded">Smazat</button>
                 </div>
             </div>
         </div>
@@ -264,7 +274,7 @@
                             class="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white px-3 py-2">
                     </div>
 
-                    <div>
+                    <div v-if="userRole === 'admin'">
                         <label
                             class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Uživatel</label>
                         <input v-model="newTicket.user" type="text"
@@ -339,18 +349,19 @@ const searchTerm = ref('');
 
 const newTicket = ref({
     subject: '',
-    // user: '',
+    user: '',
     priority: 'medium',
     category: 'technical',
     description: ''
 });
 
-const props = defineProps<{ tickets: any[], userRole: string }>();
+const props = defineProps<{ tickets: any, userRole: string }>();
 const userRole = props.userRole;
-const tickets = ref(props.tickets ?? []);
+const tickets = ref(props.tickets);
 
 const filteredTickets = computed(() => {
-    return tickets.value.filter(ticket => {
+    if (!tickets.value || !Array.isArray(tickets.value.data)) return [];
+    return tickets.value.data.filter(ticket => {
         const matchesStatus = !selectedStatus.value || ticket.status === selectedStatus.value;
         const matchesPriority = !selectedPriority.value || ticket.priority === selectedPriority.value;
         const matchesCategory = !selectedCategory.value || ticket.category === selectedCategory.value;
@@ -362,10 +373,10 @@ const filteredTickets = computed(() => {
     });
 });
 
-const openCount = computed(() => tickets.value.filter(t => t.status === 'open').length);
-const inProgressCount = computed(() => tickets.value.filter(t => t.status === 'in_progress').length);
-const resolvedCount = computed(() => tickets.value.filter(t => t.status === 'resolved').length);
-const totalCount = computed(() => tickets.value.length);
+const openCount = computed(() => filteredTickets.value.filter(t => t.status === 'open').length);
+const inProgressCount = computed(() => filteredTickets.value.filter(t => t.status === 'in_progress').length);
+const resolvedCount = computed(() => filteredTickets.value.filter(t => t.status === 'resolved').length);
+const totalCount = computed(() => filteredTickets.value.length);
 
 const getStatusClass = (status: string) => {
     const classes = {
@@ -429,15 +440,20 @@ const editTicket = (ticket: any) => {
 
 const createTicket = async () => {
     try {
-        await axios.post('/tickets', {
+        const payload: any = {
             subject: newTicket.value.subject,
             priority: newTicket.value.priority,
             category: newTicket.value.category,
             description: newTicket.value.description,
-        });
+        };
+        if (userRole === 'admin') {
+            payload.user = newTicket.value.user;
+        }
+        await axios.post('/tickets', payload);
         showCreateModal.value = false;
         newTicket.value = {
             subject: '',
+            user: '',
             priority: 'medium',
             category: 'technical',
             description: ''
@@ -446,6 +462,29 @@ const createTicket = async () => {
     } catch (e) {
         alert('Nepodařilo se vytvořit ticket.');
     }
+};
+
+const selectedTickets = ref<number[]>([]);
+const selectAll = ref(false);
+
+const toggleSelectAll = () => {
+    if (selectAll.value) {
+        selectedTickets.value = filteredTickets.value.map(t => t.id);
+    } else {
+        selectedTickets.value = [];
+    }
+};
+
+const massComplete = async () => {
+    if (!confirm('Opravdu označit vybrané tickety jako vyřešené?')) return;
+    await axios.post('/tickets/mass-complete', { ids: selectedTickets.value });
+    window.location.reload();
+};
+
+const massDelete = async () => {
+    if (!confirm('Opravdu smazat vybrané tickety?')) return;
+    await axios.post('/tickets/mass-delete', { ids: selectedTickets.value });
+    window.location.reload();
 };
 
 onMounted(() => {

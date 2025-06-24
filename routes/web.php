@@ -17,15 +17,22 @@ Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// Route::get('/tickets', function () {
-//     return Inertia::render('Tickets');
-// })->middleware(['auth', 'verified'])->name('tickets');
+Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
+
+Route::post('/tickets', [TicketController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->name('tickets.store');
 
 Route::get('/tickets/{id}', [TicketController::class, 'show'])
     ->middleware(['auth', 'verified'])
     ->name('tickets.reply');
 
 Route::post('/tickets/{id}/reply', [TicketController::class, 'reply'])
+    ->middleware(['auth', 'verified']);
+
+Route::post('/tickets/mass-complete', [TicketController::class, 'massComplete'])
+    ->middleware(['auth', 'verified']);
+Route::post('/tickets/mass-delete', [TicketController::class, 'massDelete'])
     ->middleware(['auth', 'verified']);
 
 Route::get('/users', function () {
@@ -39,14 +46,6 @@ Route::get('/status', function () {
 Route::get('/others', function () {
     return Inertia::render('Others');
 })->middleware(['auth', 'verified'])->name('others');
-
-
-Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
-
-
-Route::post('/tickets', [TicketController::class, 'store'])
-    ->middleware(['auth', 'verified'])
-    ->name('tickets.store');
 
 Route::get('/seed-tickets', function () {
     DB::connection('tickets')->transaction(function () {
@@ -77,7 +76,8 @@ Route::get('/api/servers/status', [ServerStatusController::class, 'index']);
 Route::post('/api/servers/{id}/zapnout', [ServerControlController::class, 'start']);
 Route::post('/api/servers/{id}/vypnout', [ServerControlController::class, 'stop']);
 Route::post('/api/servers/{id}/restartovat', [ServerControlController::class, 'restart']);
-
+Route::patch('/tickets/{id}/status', [TicketController::class, 'updateStatus'])->middleware(['auth', 'verified']);
+Route::patch('/tickets/{id}/priority', [TicketController::class, 'updatePriority'])->middleware(['auth', 'verified']);
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

@@ -252,6 +252,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/vue3';
 import { ref, onMounted, nextTick, computed } from 'vue';
+import axios from 'axios';
+
 
 // Accept the ticket ID from the route
 const props = defineProps<{
@@ -324,14 +326,20 @@ const sendReply = async () => {
     }
 };
 
-const updateStatus = () => {
-    // API call to update status
-    console.log('Status updated:', ticket.value.status);
+const updateStatus = async () => {
+    try {
+        await axios.patch(`/tickets/${ticket.value.id}/status`, { status: ticket.value.status });
+    } catch (e) {
+        alert('Nepodařilo se změnit status.');
+    }
 };
 
-const updatePriority = () => {
-    // API call to update priority
-    console.log('Priority updated:', ticket.value.priority);
+const updatePriority = async () => {
+    try {
+        await axios.patch(`/tickets/${ticket.value.id}/priority`, { priority: ticket.value.priority });
+    } catch (e) {
+        alert('Nepodařilo se změnit prioritu.');
+    }
 };
 
 const updateCategory = () => {
