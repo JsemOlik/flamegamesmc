@@ -125,6 +125,43 @@ Route::middleware(['auth', 'verified'])->group(function () {
         }
         return response()->json(['success' => true, 'role' => $user->role]);
     });
+
+    // Change user login code
+    Route::post('/users/{user}/change-code', function (Request $request, User $user) {
+        $request->validate([
+            'code' => 'required|string|max:255|unique:users,code,' . $user->id,
+        ]);
+        $user->code = $request->code;
+        $user->save();
+        // Log admin action
+        $admin = auth()->user();
+        if ($admin && $admin->role === 'admin') {
+            DB::table('admin_logs')->insert([
+                'user_id' => $admin->id,
+                'action' => 'change_code',
+                'description' => 'Changed login code for user ' . $user->name,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+        return response()->json(['success' => true, 'code' => $user->code]);
+    });
+
+    Route::delete('/users/{user}', function (User $user) {
+        // Log admin action BEFORE deleting the user
+        $admin = auth()->user();
+        if ($admin && $admin->role === 'admin') {
+            DB::table('admin_logs')->insert([
+                'user_id' => $admin->id,
+                'action' => 'delete_user',
+                'description' => 'Deleted user ' . $user->name,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+        $user->delete();
+        return response()->json(['success' => true]);
+    });
 });
 
 Route::get('/seed-tickets', function () {

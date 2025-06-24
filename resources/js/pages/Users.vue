@@ -78,8 +78,9 @@
                             </div>
                             <!-- Actions -->
                             <div class="space-y-4">
-                                <Button class="w-full" @click="openPasswordModal(selectedUser)">Změnit heslo</Button>
+                                <Button class="w-full" @click="openCodeModal(selectedUser)">Změnit Login Kód</Button>
                                 <Button class="w-full" @click="openRoleModal(selectedUser)">Změnit roli</Button>
+                                <Button class="w-full" variant="destructive" @click="openDeleteModal(selectedUser)">Smazat uživatele</Button>
                             </div>
                         </div>
                         <div class="px-8 py-4 border-t border-neutral-200 dark:border-neutral-700 flex justify-end">
@@ -89,26 +90,38 @@
                 </div>
                 </transition>
 
-                <!-- Password Modal -->
-                <div v-if="showPasswordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-in fade-in duration-200">
+                <!-- Code Modal (replaces Password Modal) -->
+                <div v-if="showCodeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-in fade-in duration-200">
                     <div class="bg-white dark:bg-neutral-800 rounded-lg max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
                         <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
-                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">Změnit heslo pro {{ selectedUser?.name }}</h3>
+                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">Změnit Login Kód pro {{ selectedUser?.name }}</h3>
                         </div>
                         <div class="p-6 space-y-4">
                             <div>
-                                <Label for="new_password">Nové heslo</Label>
-                                <Input id="new_password" v-model="passwordForm.password" type="password" placeholder="Nové heslo" />
-                                <InputError :message="passwordForm.error" />
-                            </div>
-                            <div>
-                                <Label for="password_confirmation">Potvrdit heslo</Label>
-                                <Input id="password_confirmation" v-model="passwordForm.password_confirmation" type="password" placeholder="Potvrdit heslo" />
+                                <Label for="new_code">Nový Login Kód</Label>
+                                <Input id="new_code" v-model="codeForm.code" type="text" placeholder="Nový Login Kód" />
+                                <InputError :message="codeForm.error" />
                             </div>
                         </div>
                         <div class="px-6 py-4 border-t border-neutral-200 dark:border-neutral-700 flex justify-end space-x-3">
-                            <Button @click="closePasswordModal" variant="outline">Zrušit</Button>
-                            <Button @click="changePassword" :disabled="passwordForm.processing">Uložit</Button>
+                            <Button @click="closeCodeModal" variant="outline">Zrušit</Button>
+                            <Button @click="changeCode" :disabled="codeForm.processing">Uložit</Button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete Confirmation Modal -->
+                <div v-if="showDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-in fade-in duration-200">
+                    <div class="bg-white dark:bg-neutral-800 rounded-lg max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+                        <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
+                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">Smazat uživatele</h3>
+                        </div>
+                        <div class="p-6">
+                            <p>Opravdu chcete smazat tohoto uživatele? Tato akce je nevratná.</p>
+                        </div>
+                        <div class="px-6 py-4 border-t border-neutral-200 dark:border-neutral-700 flex justify-end space-x-3">
+                            <Button @click="closeDeleteModal" variant="outline">Zrušit</Button>
+                            <Button @click="deleteUser" variant="destructive" :disabled="deleteForm.processing">Smazat</Button>
                         </div>
                     </div>
                 </div>
@@ -179,47 +192,79 @@ function closeUserPanel() {
     selectedUser.value = null;
 }
 
-const showPasswordModal = ref(false);
-const showRoleModal = ref(false);
+const showCodeModal = ref(false);
+const showDeleteModal = ref(false);
 
-const passwordForm = ref({
-    password: '',
-    password_confirmation: '',
+const codeForm = ref({
+    code: '',
     error: '',
     processing: false,
 });
+const deleteForm = ref({
+    processing: false,
+});
+
+function openCodeModal(user: any) {
+    selectedUser.value = user;
+    codeForm.value = { code: '', error: '', processing: false };
+    showCodeModal.value = true;
+}
+function closeCodeModal() {
+    showCodeModal.value = false;
+}
+async function changeCode() {
+    codeForm.value.processing = true;
+    codeForm.value.error = '';
+    if (!codeForm.value.code) {
+        codeForm.value.error = 'Login kód nesmí být prázdný.';
+        codeForm.value.processing = false;
+        return;
+    }
+    try {
+        const res = await axios.post(`/users/${selectedUser.value.id}/change-code`, {
+            code: codeForm.value.code,
+        });
+        // Update the user's code in the local list only if backend succeeded
+        const idx = users.value.findIndex(u => u.id === selectedUser.value?.id);
+        if (idx !== -1 && res.data && res.data.code) {
+            users.value[idx].code = res.data.code;
+            if (selectedUser.value) selectedUser.value.code = res.data.code;
+        }
+        showCodeModal.value = false;
+    } catch (e) {
+        codeForm.value.error = 'Chyba při změně login kódu.';
+    } finally {
+        codeForm.value.processing = false;
+    }
+}
+
+function openDeleteModal(user: any) {
+    selectedUser.value = user;
+    showDeleteModal.value = true;
+}
+function closeDeleteModal() {
+    showDeleteModal.value = false;
+}
+async function deleteUser() {
+    deleteForm.value.processing = true;
+    try {
+        await axios.delete(`/users/${selectedUser.value.id}`);
+        // Remove user from local list
+        users.value = users.value.filter(u => u.id !== selectedUser.value.id);
+        closeDeleteModal();
+        closeUserPanel();
+    } catch (e) {
+        alert('Chyba při mazání uživatele.');
+    } finally {
+        deleteForm.value.processing = false;
+    }
+}
+
+const showRoleModal = ref(false);
 
 const roleForm = ref({
     role: 'player',
 });
-
-function openPasswordModal(user: any) {
-    selectedUser.value = user;
-    passwordForm.value = { password: '', password_confirmation: '', error: '', processing: false };
-    showPasswordModal.value = true;
-}
-function closePasswordModal() {
-    showPasswordModal.value = false;
-    //selectedUser.value = null;
-}
-function changePassword() {
-    passwordForm.value.processing = true;
-    passwordForm.value.error = '';
-    if (!passwordForm.value.password || passwordForm.value.password.length < 6) {
-        passwordForm.value.error = 'Heslo musí mít alespoň 6 znaků.';
-        passwordForm.value.processing = false;
-        return;
-    }
-    if (passwordForm.value.password !== passwordForm.value.password_confirmation) {
-        passwordForm.value.error = 'Hesla se neshodují.';
-        passwordForm.value.processing = false;
-        return;
-    }
-    setTimeout(() => {
-        passwordForm.value.processing = false;
-        showPasswordModal.value = false;
-    }, 800);
-}
 
 function openRoleModal(user: any) {
     selectedUser.value = user;
@@ -228,7 +273,6 @@ function openRoleModal(user: any) {
 }
 function closeRoleModal() {
     showRoleModal.value = false;
-    //selectedUser.value = null;
 }
 async function changeRole() {
     if (!selectedUser.value) return;
