@@ -17,10 +17,17 @@
                 <div class="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
                     <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700 flex justify-between items-center">
                         <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">Seznam uživatelů</h2>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-neutral-500 dark:text-neutral-400 mr-2">Řazení:</span>
+                            <div class="inline-flex rounded-md shadow-sm" role="group">
+                                <Button :variant="sortOption === 'name' ? 'default' : 'outline'" size="sm" @click="sortOption = 'name'">Abecedně</Button>
+                                <Button :variant="sortOption === 'date' ? 'default' : 'outline'" size="sm" @click="sortOption = 'date'">Podle registrace</Button>
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <ul>
-                            <li v-for="user in users" :key="user.id" @click="openUserPanel(user)"
+                            <li v-for="user in sortedUsers" :key="user.id" @click="openUserPanel(user)"
                                 class="flex items-center gap-4 px-6 py-4 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all border-b border-neutral-100 dark:border-neutral-700 last:border-b-0">
                                 <div class="w-12 h-12">
                                     <img :src="`https://mc-heads.net/avatar/${encodeURIComponent(user.name)}/40`" :alt="user.name" class="w-full h-full object-cover rounded-lg bg-neutral-200 dark:bg-neutral-700" />
@@ -33,7 +40,7 @@
                                         </span>
                                     </div>
                                     <div class="text-sm text-neutral-500 dark:text-neutral-300 truncate">{{ user.email }}</div>
-                                    <div class="text-xs text-neutral-400 dark:text-neutral-500 mt-1">Login kód: <span class="font-mono">{{ user.code || '—' }}</span></div>
+                                    <div class="text-xs text-neutral-400 dark:text-neutral-500 mt-1">Login kód: <span class="font-mono blur-until-hover">{{ user.code || '—' }}</span></div>
                                 </div>
                                 <div class="text-xs text-neutral-400 dark:text-neutral-500 text-right min-w-[100px]">
                                     Registrován: <span class="font-medium text-neutral-700 dark:text-neutral-200">{{ user.created_at }}</span>
@@ -51,11 +58,11 @@
                     <div class="relative ml-auto w-full max-w-md bg-white dark:bg-neutral-900 h-full shadow-2xl animate-in slide-in-from-right duration-200 flex flex-col">
                         <div class="px-8 py-8 border-b border-neutral-200 dark:border-neutral-700 flex flex-col items-center">
                             <div class="w-24 h-24 mb-4">
-                                <img :src="selectedUser ? `https://mc-heads.net/avatar/${encodeURIComponent(selectedUser.name)}/80` : ''" :alt="selectedUser?.name" class="w-full h-full object-cover rounded-lg bg-neutral-200 dark:bg-neutral-700" />
+                                <img :src="selectedUser ? `https://mc-heads.net/avatar/${encodeURIComponent(selectedUser.name)}/100` : ''" :alt="selectedUser?.name" class="w-full h-full object-cover rounded-lg bg-neutral-200 dark:bg-neutral-700" />
                             </div>
                             <h2 class="text-2xl font-bold text-neutral-900 dark:text-white mb-1">{{ selectedUser?.name }}</h2>
                             <div class="text-sm text-neutral-500 dark:text-neutral-300 mb-2">{{ selectedUser?.email }}</div>
-                            <div class="text-xs text-neutral-400 dark:text-neutral-500 mb-2">Login kód: <span class="font-mono">{{ selectedUser?.code || '—' }}</span></div>
+                            <div class="text-xs text-neutral-400 dark:text-neutral-500 mb-2">Login kód: <span class="font-mono user-panel-blur" style="filter: blur(0.25em); transition: filter 0.2s; cursor: pointer;" @mouseover="(e) => e.target.style.filter = 'none'" @mouseleave="(e) => e.target.style.filter = 'blur(0.25em)'">{{ selectedUser?.code || '—' }}</span></div>
                             <span :class="selectedUser?.role === 'admin' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'" class="px-2 py-1 text-xs font-medium rounded-full mb-2">
                                 {{ selectedUser?.role === 'admin' ? 'Admin' : 'Hráč' }}
                             </span>
@@ -155,7 +162,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { type BreadcrumbItem, type User } from '@/types';
 import Input from '@/components/ui/input/Input.vue';
 import Label from '@/components/ui/label/Label.vue';
@@ -179,6 +186,22 @@ const users = ref((props.users ?? []).map(user => ({
         lastLogin: user.updated_at ? user.updated_at.substring(0, 10) : 'N/A',
     }
 })));
+
+// Sorting logic
+const sortOption = ref<'name' | 'date'>('date');
+
+const sortedUsers = computed(() => {
+    let admins = users.value.filter(u => u.role === 'admin');
+    let others = users.value.filter(u => u.role !== 'admin');
+    if (sortOption.value === 'name') {
+        admins.sort((a, b) => a.name.localeCompare(b.name, 'cs', { sensitivity: 'base' }));
+        others.sort((a, b) => a.name.localeCompare(b.name, 'cs', { sensitivity: 'base' }));
+    } else if (sortOption.value === 'date') {
+        admins.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        others.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+    return [...admins, ...others];
+});
 
 const showUserPanel = ref(false);
 const selectedUser = ref<any | null>(null);
@@ -309,5 +332,23 @@ async function changeRole() {
   to {
     transform: translateX(0);
   }
+}
+
+/* Blur login code until hover */
+.blur-until-hover {
+  filter: blur(0.25em);
+  transition: filter 0.2s;
+  cursor: pointer;
+}
+.blur-until-hover:hover {
+  filter: none;
+}
+.user-panel-blur {
+  filter: blur(0.25em);
+  transition: filter 0.2s;
+  cursor: pointer;
+}
+.user-panel-blur:hover {
+  filter: none;
 }
 </style>
