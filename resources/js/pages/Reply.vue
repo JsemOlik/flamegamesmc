@@ -356,6 +356,8 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/vue3';
 import { ref, onMounted, nextTick, computed } from 'vue';
 import axios from 'axios';
+import { event } from 'vue';
+import { TicketMessageSent } from '@/Events/TicketMessageSent';
 
 
 // Accept the ticket ID from the route
@@ -473,6 +475,8 @@ const sendReply = async () => {
 
         replyText.value = '';
         scrollToBottom();
+
+        event(new TicketMessageSent(data));
     } catch (e) {
         alert('Odpověď se nepodařilo odeslat.');
     }

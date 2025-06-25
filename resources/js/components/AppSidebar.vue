@@ -46,7 +46,7 @@ const page = usePage();
 const userRole = page.props.auth?.user?.role;
 
 const mainNavItems = userRole === 'player'
-    ? allNavItems.filter(item => item.title === 'Tickets')
+    ? allNavItems.filter(item => item.title === 'Tickety')
     : allNavItems;
 
 const footerNavItems: NavItem[] = [

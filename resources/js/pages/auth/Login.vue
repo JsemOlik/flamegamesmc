@@ -39,9 +39,9 @@ const submit = () => {
         <form @submit.prevent="submit" class="flex flex-col gap-6">
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="name">Username</Label>
+                    <Label for="name">MC Uživatelské Jméno</Label>
                     <Input id="name" type="text" required autofocus :tabindex="1" autocomplete="username"
-                        v-model="form.name" placeholder="Username" />
+                        v-model="form.name" placeholder="JsemOlik" />
                     <InputError :message="form.errors.name" />
                 </div>
 
@@ -49,8 +49,8 @@ const submit = () => {
                     <div class="flex items-center justify-between">
                         <Label for="code">Login kód</Label>
                     </div>
-                    <Input id="code" type="text" required :tabindex="2" autocomplete="one-time-code"
-                        v-model="form.code" placeholder="Login kód" />
+                    <Input id="code" type="text" required :tabindex="2" autocomplete="one-time-code" v-model="form.code"
+                        placeholder="xxxxxxxx" />
                     <InputError :message="form.errors.code" />
                 </div>
 
@@ -67,10 +67,10 @@ const submit = () => {
                 </Button>
             </div>
 
-            <div class="text-center text-sm text-muted-foreground">
+            <!-- <div class="text-center text-sm text-muted-foreground">
                 Don't have an account?
                 <TextLink :href="route('register')" :tabindex="5">Sign up</TextLink>
-            </div>
+            </div> -->
         </form>
     </AuthBase>
 </template>
