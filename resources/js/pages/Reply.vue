@@ -123,17 +123,18 @@
                     <!-- Sidebar -->
                     <div class="space-y-6">
                         <!-- User Info -->
-                        <div
-                            v-if="isAdmin"
+                        <div v-if="isAdmin"
                             class="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
-                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-white mb-4">Informace o uživateli</h3>
+                            <h3 class="text-lg font-semibold text-neutral-900 dark:text-white mb-4">Informace o
+                                uživateli</h3>
 
                             <div class="space-y-3">
                                 <div class="flex items-center gap-3">
-                                    <img :src="userData.avatarUrl" :alt="userData.username" 
+                                    <img :src="userData.avatarUrl" :alt="userData.username"
                                         class="w-10 h-10 rounded-lg bg-neutral-200 dark:bg-neutral-700" />
                                     <div>
-                                        <p class="font-medium text-neutral-900 dark:text-white">{{ userData.username }}</p>
+                                        <p class="font-medium text-neutral-900 dark:text-white">{{ userData.username }}
+                                        </p>
                                         <p class="text-sm text-neutral-500 dark:text-neutral-400">Hráč</p>
                                     </div>
                                 </div>
@@ -155,7 +156,8 @@
                         </div>
 
                         <!-- Participants Section -->
-                        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
+                        <div
+                            class="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
                             <div class="flex justify-between items-center mb-4">
                                 <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">Účastníci</h3>
                                 <button v-if="isAdmin || isOwner" @click="showAddParticipantModal = true"
@@ -169,7 +171,8 @@
                                 <div v-if="messages.some(m => m.isAdmin)" class="flex items-center justify-between">
                                     <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
-                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                             </svg>
@@ -177,7 +180,8 @@
                                         <div>
                                             <p class="font-medium text-neutral-900 dark:text-white">
                                                 Admin
-                                                <span class="ml-2 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded">
+                                                <span
+                                                    class="ml-2 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded">
                                                     Admin
                                                 </span>
                                             </p>
@@ -185,7 +189,7 @@
                                     </div>
                                 </div>
                                 <!-- Existing participants list -->
-                                <div v-for="participant in participants" :key="participant.username" 
+                                <div v-for="participant in participants" :key="participant.username"
                                     class="flex items-center justify-between">
                                     <div class="flex items-center gap-3">
                                         <img :src="participant.avatarUrl" :alt="participant.username"
@@ -193,7 +197,7 @@
                                         <div>
                                             <p class="font-medium text-neutral-900 dark:text-white">
                                                 {{ participant.username }}
-                                                <span v-if="participant.role === 'owner'" 
+                                                <span v-if="participant.role === 'owner'"
                                                     class="ml-2 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded">
                                                     Vlastník
                                                 </span>
@@ -210,8 +214,7 @@
                         </div>
 
                         <!-- Ticket Info -->
-                        <div
-                            v-if="isAdmin"
+                        <div v-if="isAdmin"
                             class="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
                             <h3 class="text-lg font-semibold text-neutral-900 dark:text-white mb-4">Informace o ticketu
                             </h3>
@@ -244,8 +247,7 @@
                         </div>
 
                         <!-- Quick Actions -->
-                        <div
-                            v-if="isAdmin || isOwner"
+                        <div v-if="isAdmin || isOwner"
                             class="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
                             <h3 class="text-lg font-semibold text-neutral-900 dark:text-white mb-4">Rychlé akce</h3>
 
@@ -269,7 +271,8 @@
     <!-- Confirmation Modal -->
     <div v-if="showConfirmModal"
         class="fixed inset-0 backdrop-blur-sm bg-white/30 dark:bg-neutral-900/30 flex items-center justify-center z-50 animate-in fade-in duration-200">
-        <div class="bg-white dark:bg-neutral-800 rounded-lg shadow-lg max-w-sm w-full p-6 text-center animate-in zoom-in-95 duration-200" @click.stop>
+        <div class="bg-white dark:bg-neutral-800 rounded-lg shadow-lg max-w-sm w-full p-6 text-center animate-in zoom-in-95 duration-200"
+            @click.stop>
             <h3 class="text-lg font-semibold mb-4 text-neutral-900 dark:text-white">Potvrzení Akce</h3>
             <p class="mb-6 text-neutral-700 dark:text-neutral-300">
                 Opravdu chcete
@@ -282,13 +285,12 @@
                 tento ticket?
             </p>
             <div class="flex justify-center gap-6">
-                <button @click="confirmAction"
-                    :class="[
-                        'px-4 py-2 text-white rounded-md font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg',
-                        actionToConfirm === 'resolve' 
-                            ? 'bg-green-600 hover:bg-green-700' 
-                            : 'bg-red-600 hover:bg-red-700'
-                    ]">
+                <button @click="confirmAction" :class="[
+                    'px-4 py-2 text-white rounded-md font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg',
+                    actionToConfirm === 'resolve'
+                        ? 'bg-green-600 hover:bg-green-700'
+                        : 'bg-red-600 hover:bg-red-700'
+                ]">
                     Potvrdit
                 </button>
                 <button @click="cancelAction"
@@ -302,9 +304,10 @@
     <!-- Add Participant Modal -->
     <div v-if="showAddParticipantModal"
         class="fixed inset-0 backdrop-blur-sm bg-white/30 dark:bg-neutral-900/30 flex items-center justify-center z-50 animate-in fade-in duration-200">
-        <div class="bg-white dark:bg-neutral-800 rounded-lg shadow-lg max-w-sm w-full p-6 animate-in zoom-in-95 duration-200">
+        <div
+            class="bg-white dark:bg-neutral-800 rounded-lg shadow-lg max-w-sm w-full p-6 animate-in zoom-in-95 duration-200">
             <h3 class="text-lg font-semibold mb-4 text-neutral-900 dark:text-white">Přidat účastníka</h3>
-            
+
             <form @submit.prevent="addParticipant">
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
@@ -319,8 +322,7 @@
                         class="px-4 py-2 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700">
                         Zrušit
                     </button>
-                    <button type="submit"
-                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
                         Přidat
                     </button>
                 </div>
@@ -331,7 +333,8 @@
     <!-- Remove Participant Modal -->
     <div v-if="showRemoveParticipantModal"
         class="fixed inset-0 backdrop-blur-sm bg-white/30 dark:bg-neutral-900/30 flex items-center justify-center z-50 animate-in fade-in duration-200">
-        <div class="bg-white dark:bg-neutral-800 rounded-lg shadow-lg max-w-sm w-full p-6 animate-in zoom-in-95 duration-200">
+        <div
+            class="bg-white dark:bg-neutral-800 rounded-lg shadow-lg max-w-sm w-full p-6 animate-in zoom-in-95 duration-200">
             <h3 class="text-lg font-semibold mb-4 text-neutral-900 dark:text-white">Potvrzení odebrání</h3>
             <p class="mb-6 text-neutral-700 dark:text-neutral-300">
                 Opravdu chcete odebrat uživatele <span class="font-bold">{{ participantToRemove }}</span> z ticketu?
@@ -357,7 +360,7 @@ import { Head, usePage } from '@inertiajs/vue3';
 import { ref, onMounted, nextTick, computed } from 'vue';
 import axios from 'axios';
 import { event } from 'vue';
-import { TicketMessageSent } from '@/Events/TicketMessageSent';
+import { TicketMessageSent } from '../../../app/Events/TicketMessageSent.php';
 
 
 // Accept the ticket ID from the route
