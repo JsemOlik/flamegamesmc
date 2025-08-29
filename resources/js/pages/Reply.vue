@@ -34,7 +34,7 @@
                             <option value="resolved">Vyřešené</option>
                             <option value="closed">Uzavřené</option>
                         </select>
-                        <button @click="$router.go(-1)"
+                        <button @click="goBack"
                             class="px-4 py-2 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700">
                             Zpět
                         </button>
@@ -356,7 +356,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, usePage, router } from '@inertiajs/vue3';
 import { ref, onMounted, nextTick, computed } from 'vue';
 import axios from 'axios';
 
@@ -451,34 +451,27 @@ const sendReply = async () => {
     if (!replyText.value.trim()) return;
 
     try {
-        const response = await fetch(`/tickets/${ticket.value.id}/reply`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '',
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({
-                message: replyText.value,
-            }),
+        const response = await axios.post(`/tickets/${ticket.value.id}/reply`, {
+            message: replyText.value,
         });
 
-        if (!response.ok) throw new Error('Failed to send reply');
-
-        const data = await response.json();
-
         messages.value.push({
-            id: data.id,
-            content: data.content,
-            author: data.author,
-            timestamp: data.timestamp,
-            isAdmin: data.isAdmin,
+            id: response.data.id,
+            content: response.data.content,
+            author: response.data.author,
+            timestamp: response.data.timestamp,
+            isAdmin: response.data.isAdmin,
         });
 
         replyText.value = '';
         scrollToBottom();
-    } catch (e) {
-        alert('Odpověď se nepodařilo odeslat.');
+    } catch (e: any) {
+        console.error('Reply error:', e);
+        if (e.response?.data?.message) {
+            alert(`Chyba: ${e.response.data.message}`);
+        } else {
+            alert('Odpověď se nepodařilo odeslat.');
+        }
     }
 };
 
@@ -498,9 +491,12 @@ const updatePriority = async () => {
     }
 };
 
-const updateCategory = () => {
-    // API call to update category
-    console.log('Category updated:', ticket.value.category);
+const updateCategory = async () => {
+    try {
+        await axios.patch(`/tickets/${ticket.value.id}/category`, { category: ticket.value.category });
+    } catch (e) {
+        alert('Nepodařilo se změnit kategorii.');
+    }
 };
 
 const getStatusClass = (status: string) => {
@@ -566,12 +562,24 @@ const addParticipant = async () => {
     if (!newParticipantUsername.value.trim()) return;
 
     try {
-        await axios.post(`/tickets/${ticket.value.id}/participants`, {
+        const response = await axios.post(`/tickets/${ticket.value.id}/participants`, {
             username: newParticipantUsername.value
         });
+        
+        if (response.data.message) {
+            alert(response.data.message);
+        }
         window.location.reload();
-    } catch (e) {
-        alert('Nepodařilo se přidat účastníka.');
+    } catch (e: any) {
+        console.error('Add participant error:', e);
+        if (e.response?.data?.error) {
+            alert(e.response.data.error);
+        } else if (e.response?.data?.errors) {
+            const errors = Object.values(e.response.data.errors).flat().join('\n');
+            alert(`Chyby:\n${errors}`);
+        } else {
+            alert('Nepodařilo se přidat účastníka.');
+        }
     } finally {
         showAddParticipantModal.value = false;
         newParticipantUsername.value = '';
@@ -599,6 +607,15 @@ const confirmRemoveParticipant = async () => {
         alert('Nepodařilo se odebrat účastníka.');
         showRemoveParticipantModal.value = false;
         participantToRemove.value = null;
+    }
+};
+
+const goBack = () => {
+    // Try to go back in browser history, fallback to tickets index
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        router.visit('/tickets');
     }
 };
 

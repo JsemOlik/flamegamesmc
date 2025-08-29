@@ -75,6 +75,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/tickets/{id}/reply', [TicketController::class, 'reply']);
     Route::patch('/tickets/{id}/status', [TicketController::class, 'updateStatus']);
     Route::patch('/tickets/{id}/priority', [TicketController::class, 'updatePriority']);
+    Route::patch('/tickets/{id}/category', [TicketController::class, 'updateCategory']);
     Route::delete('/tickets/{id}', [TicketController::class, 'destroy'])->name('tickets.destroy');
 
     // Participant management routes
@@ -163,6 +164,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $user->delete();
         return response()->json(['success' => true]);
     });
+});
+
+Route::get('/csrf-token', function () {
+    return response()->json(['token' => csrf_token()]);
 });
 
 Route::get('/seed-tickets', function () {

@@ -516,7 +516,7 @@ const createTicket = async () => {
         if (userRole === 'admin') {
             payload.user = newTicket.value.user;
         }
-        await axios.post('/tickets', payload);
+        const response = await axios.post('/tickets', payload);
         showCreateModal.value = false;
         newTicket.value = {
             subject: '',
@@ -526,9 +526,20 @@ const createTicket = async () => {
             description: '',
             participants: []
         };
+        
+        // Show success message
+        alert(response.data.message || 'Ticket byl úspěšně vytvořen!');
         window.location.reload();
-    } catch (e) {
-        alert('Nepodařilo se vytvořit ticket.');
+    } catch (e: any) {
+        console.error('Ticket creation error:', e);
+        if (e.response?.data?.errors) {
+            const errors = Object.values(e.response.data.errors).flat().join('\n');
+            alert(`Chyby při vytváření ticketu:\n${errors}`);
+        } else if (e.response?.data?.message) {
+            alert(`Chyba: ${e.response.data.message}`);
+        } else {
+            alert('Nepodařilo se vytvořit ticket. Zkontrolujte konzoli pro více detailů.');
+        }
     }
 };
 
