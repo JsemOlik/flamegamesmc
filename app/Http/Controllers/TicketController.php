@@ -33,10 +33,11 @@ class TicketController extends Controller
 
         // Map tickets for frontend
         $tickets->getCollection()->transform(function ($ticket) {
+            $user = \App\Models\User::find($ticket->user_id);
             return [
                 'id' => $ticket->id,
                 'subject' => $ticket->subject,
-                'username' => $ticket->username,
+                'username' => $user ? $user->name : 'unknown',
                 'priority' => $ticket->priority,
                 'category' => $ticket->category,
                 'status' => $ticket->status,
@@ -112,6 +113,7 @@ class TicketController extends Controller
             'canManageParticipants' => $user->role === 'admin' || ($ticket->owner && $ticket->owner->user_id === $user->id),
             'currentUserRole' => $user->role,
             'currentUserId' => $user->id,
+            'currentUsername' => $user->name,
         ]);
     }
 
@@ -168,11 +170,11 @@ class TicketController extends Controller
         // Determine owner ID
         $inputUsername = $request->input('user');
         $foundUser = null;
-        $ownerId = $user->role === 'admin' ? (function() use ($inputUsername, &$foundUser) {
+        $ownerId = $user->role === 'admin' ? (function () use ($inputUsername, &$foundUser) {
             $foundUser = \App\Models\User::where('name', $inputUsername)->first();
             return $foundUser ? $foundUser->id : null;
         })() : $user->id;
-        
+
         \Log::info('Admin ticket creation debug', [
             'inputUsername' => $inputUsername,
             'foundUser' => $foundUser,
@@ -290,6 +292,32 @@ class TicketController extends Controller
         return response()->json(['priority' => $ticket->priority]);
     }
 
+    public function destroy($id)
+    {
+        $user = auth()->user();
+        $ticket = Ticket::findOrFail($id);
+
+        // Check if user can delete this ticket (only admin or ticket owner)
+        if ($user->role !== 'admin' && $ticket->user_id !== $user->id) {
+            abort(403, 'Unauthorized');
+        }
+
+        $ticket->delete();
+
+        // Log admin action
+        if ($user->role === 'admin') {
+            DB::table('admin_logs')->insert([
+                'user_id' => $user->id,
+                'action' => 'delete_ticket',
+                'description' => 'Deleted ticket #' . $id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
     // Add new methods for managing participants
     public function addParticipant(Request $request, $id)
     {
@@ -323,12 +351,12 @@ class TicketController extends Controller
     {
         $user = auth()->user();
         $ticket = Ticket::findOrFail($id);
-    
+
         // Only admin or ticket owner can remove participants
         if ($user->role !== 'admin' && $ticket->owner->user_id !== $user->id) {
             abort(403, 'Unauthorized');
         }
-    
+
         // Accept either user_id or username
         if ($request->has('username')) {
             $participantUser = \App\Models\User::where('name', $request->username)->first();
@@ -337,32 +365,32 @@ class TicketController extends Controller
             }
             $request->merge(['user_id' => $participantUser->id]);
         }
-    
+
         $request->validate([
             'user_id' => 'required|integer|exists:users,id',
         ]);
-    
+
         $ticket->removeParticipant($request->user_id);
-    
+
         // Return JSON for AJAX requests
         return response()->json(['success' => true]);
     }
 
     public function recentOpen()
     {
-        $tickets = \App\Models\Ticket::with(['owner'])
-            ->where('status', 'open')
+        $tickets = \App\Models\Ticket::where('status', 'open')
             ->orderByDesc('created_at')
             ->limit(3)
             ->get();
 
         $tickets = $tickets->map(function ($ticket) {
+            $user = \App\Models\User::find($ticket->user_id);
             return [
                 'id' => $ticket->id,
                 'subject' => $ticket->subject,
                 'status' => ucfirst($ticket->status),
                 'created' => $ticket->created_at->format('Y-m-d'),
-                'user' => $ticket->owner ? $ticket->owner->username : 'unknown',
+                'user' => $user ? $user->name : 'unknown',
             ];
         });
 

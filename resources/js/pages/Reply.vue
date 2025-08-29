@@ -359,8 +359,6 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/vue3';
 import { ref, onMounted, nextTick, computed } from 'vue';
 import axios from 'axios';
-import { event } from 'vue';
-import { TicketMessageSent } from '../../../app/Events/TicketMessageSent.php';
 
 
 // Accept the ticket ID from the route
@@ -376,6 +374,7 @@ const props = defineProps<{
     },
     canManageParticipants: boolean,
     currentUserRole: string,
+    currentUserId: number,
     currentUsername: string,
 }>();
 
@@ -478,8 +477,6 @@ const sendReply = async () => {
 
         replyText.value = '';
         scrollToBottom();
-
-        event(new TicketMessageSent(data));
     } catch (e) {
         alert('Odpověď se nepodařilo odeslat.');
     }

@@ -75,15 +75,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/tickets/{id}/reply', [TicketController::class, 'reply']);
     Route::patch('/tickets/{id}/status', [TicketController::class, 'updateStatus']);
     Route::patch('/tickets/{id}/priority', [TicketController::class, 'updatePriority']);
-    
+    Route::delete('/tickets/{id}', [TicketController::class, 'destroy'])->name('tickets.destroy');
+
     // Participant management routes
     Route::post('/tickets/{id}/participants', [TicketController::class, 'addParticipant']);
     Route::delete('/tickets/{id}/participants', [TicketController::class, 'removeParticipant']);
-    
+
     // Bulk actions
     Route::post('/tickets/mass-complete', [TicketController::class, 'massComplete']);
     Route::post('/tickets/mass-delete', [TicketController::class, 'massDelete']);
-    
+
     // Change user password
     Route::post('/users/{user}/change-password', function (Request $request, User $user) {
         $request->validate([
@@ -193,5 +194,5 @@ Route::get('/api/servers/status', [ServerStatusController::class, 'index']);
 Route::post('/api/servers/{id}/power', [ServerControlController::class, 'power']);
 Route::get('/api/recent-logs', [ServerStatusController::class, 'recentLogs']);
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';
