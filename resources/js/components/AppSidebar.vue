@@ -24,22 +24,21 @@ const allNavItems: NavItem[] = [
         href: '/users',
         icon: User,
     },
-    {
-        title: 'Statistiky',
-        href: '/statistic',
-        icon: ChartLine,
-    },
+    // {
+    //     title: 'Statistiky',
+    //     href: '/statistic',
+    //     icon: ChartLine,
+    // },
     {
         title: 'Status',
         href: '/status',
         icon: Server,
     },
-
-    {
-        title: 'Ostatní',
-        href: '/others',
-        icon: Ellipsis,
-    },
+    // {
+    //     title: 'Ostatní',
+    //     href: '/others',
+    //     icon: Ellipsis,
+    // },
 ];
 
 const page = usePage();
@@ -55,16 +54,16 @@ const footerNavItems: NavItem[] = [
     //     href: 'https://github.com/laravel/vue-starter-kit',
     //     icon: Folder,
     // },
-    {
-        title: 'Github Repo',
-        href: 'https://github.com/jsemolik/vue-starter',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
+    // {
+    //     title: 'Github Repo',
+    //     href: 'https://github.com/jsemolik/vue-starter',
+    //     icon: Folder,
+    // },
+    // {
+    //     title: 'Documentation',
+    //     href: 'https://laravel.com/docs/starter-kits#vue',
+    //     icon: BookOpen,
+    // },
 ];
 </script>
 
@@ -74,7 +73,7 @@ const footerNavItems: NavItem[] = [
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link :href="route('dashboard')">
+                        <Link :href="route('home')">
                         <AppLogo />
                         </Link>
                     </SidebarMenuButton>

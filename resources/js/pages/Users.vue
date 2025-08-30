@@ -182,7 +182,7 @@ const props = defineProps<{ users?: User[] }>();
 const users = ref((props.users ?? []).map(user => ({
     ...user,
     stats: {
-        ticketsCreated: Math.floor(Math.random() * 100),
+        ticketsCreated: user.tickets_count || 0,
         lastLogin: user.updated_at ? user.updated_at.substring(0, 10) : 'N/A',
     }
 })));

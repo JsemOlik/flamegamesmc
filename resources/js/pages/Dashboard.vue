@@ -20,13 +20,10 @@
 
                 <QuickActions />
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <OpenTickets :openTickets="openTickets" :loading="loadingTickets" />
-                    <PlayerActivity :recentPlayers="recentPlayers" />
-                    <RecentLogs :recentLogs="recentLogs" :loading="loadingLogs" />
+                    <AdminActions :adminActions="adminActions" :loading="loadingAdminActions" />
                 </div>
-
-                <AdminActions :adminActions="adminActions" :loading="loadingAdminActions" />
             </div>
         </div>
     </AppLayout>
@@ -39,9 +36,7 @@ import { Head } from '@inertiajs/vue3';
 import NetworkStats from '@/components/dashboard/NetworkStats.vue';
 import NodeStatusTable from '@/components/dashboard/NodeStatusTable.vue';
 import OpenTickets from '@/components/dashboard/OpenTickets.vue';
-import PlayerActivity from '@/components/dashboard/PlayerActivity.vue';
 import QuickActions from '@/components/dashboard/QuickActions.vue';
-import RecentLogs from '@/components/dashboard/RecentLogs.vue';
 import AdminActions from '@/components/dashboard/AdminActions.vue';
 import { ref, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
@@ -102,14 +97,11 @@ async function fetchStatus() {
 
 const openTickets = ref([]);
 const loadingTickets = ref(true);
-const recentLogs = ref([]);
-const loadingLogs = ref(true);
 const adminActions = ref([]);
 const loadingAdminActions = ref(true);
 
 onMounted(async () => {
     await fetchRecentTickets();
-    await fetchRecentLogs();
     await fetchAdminActions();
 });
 
@@ -124,16 +116,6 @@ async function fetchRecentTickets() {
     loadingTickets.value = false;
 }
 
-async function fetchRecentLogs() {
-    loadingLogs.value = true;
-    try {
-        const res = await axios.get('/api/recent-logs');
-        recentLogs.value = res.data;
-    } catch (e) {
-        recentLogs.value = [];
-    }
-    loadingLogs.value = false;
-}
 
 async function fetchAdminActions() {
     loadingAdminActions.value = true;
@@ -141,19 +123,11 @@ async function fetchAdminActions() {
         const res = await axios.get('/api/recent-logs');
         // Map to the format expected by AdminActions.vue
         adminActions.value = (res.data || []).map(log => {
-            // Try to extract admin and action from the message
-            // Fallback to splitting the message if needed
-            let admin = 'Admin';
-            let action = log.message;
-            const match = log.message.match(/^(.*?) (otevřel|uzavřel|změnil|restartoval|spustil|vypnul|provedl)/);
-            if (match) {
-                admin = match[1];
-                action = log.message.replace(admin + ' ', '');
-            }
             return {
-                admin,
-                action,
+                admin: log.user,
+                action: log.message,
                 time: log.time,
+                role: log.role,
             };
         });
     } catch (e) {
@@ -162,9 +136,4 @@ async function fetchAdminActions() {
     loadingAdminActions.value = false;
 }
 
-const recentPlayers = [
-    { name: 'Steve', action: 'joined', server: 'Survival-1', time: '12:01' },
-    { name: 'Alex', action: 'left', server: 'Lobby-1', time: '12:05' },
-    { name: 'Herobrine', action: 'joined', server: 'Skyblock-1', time: '12:10' },
-];
 </script>

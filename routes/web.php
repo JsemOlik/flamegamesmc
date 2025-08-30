@@ -19,6 +19,18 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
+Route::get('/bany', function () {
+    return Inertia::render('Bans');
+})->name('bany');
+
+Route::get('/staff', function () {
+    return Inertia::render('Staff');
+})->name('staff');
+
+Route::get('/discord', function () {
+    return redirect()->away('https://discord.gg/uS4V6Be8Vk');
+})->name('discord');
+
 // Register a middleware group for player restriction
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
@@ -34,7 +46,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         if (!$user || $user->role !== 'admin') {
             return redirect('/tickets');
         }
-        $users = User::all();
+        $users = User::withCount(['tickets' => function ($query) {
+            $query->whereHas('participants', function ($subQuery) {
+                $subQuery->where('role', 'owner');
+            });
+        }])->get();
+
         return Inertia::render('Users', [
             'users' => $users,
         ]);
@@ -64,7 +81,7 @@ Route::get('/statistics', function () {
 Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
 
 Route::post('/tickets', [TicketController::class, 'store'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'throttle:5,1'])
     ->name('tickets.store');
 
 // Group all ticket-specific routes
@@ -72,7 +89,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Ticket detail routes
     Route::get('/tickets/recent', [TicketController::class, 'recentOpen']);
     Route::get('/tickets/{id}', [TicketController::class, 'show'])->name('tickets.reply');
-    Route::post('/tickets/{id}/reply', [TicketController::class, 'reply']);
+    Route::post('/tickets/{id}/reply', [TicketController::class, 'reply'])->middleware('throttle:10,1');
     Route::patch('/tickets/{id}/status', [TicketController::class, 'updateStatus']);
     Route::patch('/tickets/{id}/priority', [TicketController::class, 'updatePriority']);
     Route::patch('/tickets/{id}/category', [TicketController::class, 'updateCategory']);
@@ -197,7 +214,7 @@ Route::get('/seed-tickets', function () {
 
 Route::get('/api/servers/status', [ServerStatusController::class, 'index']);
 Route::post('/api/servers/{id}/power', [ServerControlController::class, 'power']);
-Route::get('/api/recent-logs', [ServerStatusController::class, 'recentLogs']);
+Route::middleware(['auth', 'verified'])->get('/api/recent-logs', [ServerStatusController::class, 'recentLogs']);
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

@@ -496,12 +496,10 @@ const getCategoryText = (category: string) => {
 
 const viewTicket = (ticket: any) => {
     // Implement view ticket logic
-    console.log('Viewing ticket:', ticket);
 };
 
 const editTicket = (ticket: any) => {
     // Implement edit ticket logic
-    console.log('Editing ticket:', ticket);
 };
 
 const createTicket = async () => {

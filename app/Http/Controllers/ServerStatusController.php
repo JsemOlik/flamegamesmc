@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use App\Models\AdminLog;
 
 class ServerStatusController extends Controller
@@ -31,6 +32,8 @@ class ServerStatusController extends Controller
                     'Authorization' => 'Bearer ' . $apiKey,
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json',
+                ])->withOptions([
+                    'verify' => false,
                 ])->get("$panelUrl/api/client/servers/$serverId");
 
                 if (!$detailsResponse->ok()) {
@@ -44,6 +47,8 @@ class ServerStatusController extends Controller
                 $usageResponse = Http::withHeaders([
                     'Authorization' => 'Bearer ' . $apiKey,
                     'Accept' => 'application/json',
+                ])->withOptions([
+                    'verify' => false,
                 ])->get("$panelUrl/api/client/servers/$serverId/resources");
 
                 if (!$usageResponse->ok()) {
@@ -77,29 +82,24 @@ class ServerStatusController extends Controller
 
     public function recentLogs()
     {
-        $logs = AdminLog::with('admin')
-            ->orderByDesc('created_at')
-            ->limit(10)
+        $logs = DB::table('admin_logs')
+            ->join('users', 'admin_logs.user_id', '=', 'users.id')
+            ->select('admin_logs.*', 'users.name as user_name', 'users.role as user_role')
+            ->orderByDesc('admin_logs.created_at')
+            ->limit(15)
             ->get()
             ->map(function ($log) {
-                $time = $log->created_at->format('H:i');
-                $admin = $log->admin ? $log->admin->name : 'Admin';
-                $target = $log->target_type ? (ucfirst($log->target_type) . ' #' . $log->target_id) : '';
-                $details = $log->details ? json_decode($log->details, true) : [];
-                $msg = match ($log->action) {
-                    'open_ticket' => "$admin otevřel ticket $target",
-                    'close_ticket' => "$admin uzavřel ticket $target",
-                    'update_ticket_status' => "$admin změnil status ticketu $target",
-                    'restart_server' => "$admin restartoval server $target",
-                    'start_server' => "$admin spustil server $target",
-                    'stop_server' => "$admin vypnul server $target",
-                    'change_password' => "$admin změnil heslo uživatele " . (isset($details['user_email']) ? $details['user_email'] : ''),
-                    'change_role' => "$admin změnil roli uživatele " . (isset($details['user_email']) ? $details['user_email'] : '') . ' na ' . (isset($details['new_role']) ? $details['new_role'] : ''),
-                    default => "$admin provedl akci: {$log->action} $target",
-                };
+                $time = \Carbon\Carbon::parse($log->created_at)->format('H:i');
+                
+                // Use the description directly since we're now storing formatted messages
+                $message = $log->description;
+                
                 return [
                     'time' => $time,
-                    'message' => $msg,
+                    'message' => $message,
+                    'user' => $log->user_name,
+                    'role' => $log->user_role,
+                    'action' => $log->action,
                 ];
             });
         return response()->json($logs);

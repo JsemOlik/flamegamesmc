@@ -5,7 +5,9 @@
       "Bash(php artisan migrate:*)",
       "Bash(php artisan tinker:*)",
       "Bash(php artisan:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(curl:*)",
+      "Read(c:\\Users\\frnot\\Downloads/**)"
     ],
     "deny": [],
     "ask": []

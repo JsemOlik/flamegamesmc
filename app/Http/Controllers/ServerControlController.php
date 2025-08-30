@@ -24,6 +24,8 @@ class ServerControlController extends Controller
             'Authorization' => 'Bearer ' . $this->apiKey,
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
+        ])->withOptions([
+            'verify' => false,
         ])->post("{$this->panelUrl}/api/client/servers/{$serverId}/power", [
             'signal' => $action, // start, stop, restart
         ]);

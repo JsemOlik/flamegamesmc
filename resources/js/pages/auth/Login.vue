@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 
 defineProps<{
     status?: string;
@@ -28,9 +29,9 @@ const submit = () => {
 </script>
 
 <template>
-    <AuthBase title="Log in to your account" description="Enter your username and login kód below to log in">
+    <AuthBase title="Přihlaš se do svého účtu" description="Zadej svůj Minecraft username, a svůj login kód">
 
-        <Head title="Log in" />
+        <Head title="Přihlášení" />
 
         <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-600">
             {{ status }}
@@ -57,20 +58,29 @@ const submit = () => {
                 <div class="flex items-center justify-between">
                     <Label for="remember" class="flex items-center space-x-3">
                         <Checkbox id="remember" v-model="form.remember" :tabindex="3" />
-                        <span>Remember me</span>
+                        <span>Zapamatovat si mě</span>
                     </Label>
                 </div>
 
                 <Button type="submit" class="mt-4 w-full" :tabindex="4" :disabled="form.processing">
                     <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
-                    Log in
+                    Přihlásit se
                 </Button>
-            </div>
 
-            <!-- <div class="text-center text-sm text-muted-foreground">
-                Don't have an account?
-                <TextLink :href="route('register')" :tabindex="5">Sign up</TextLink>
-            </div> -->
+            </div>
+            <Accordion type="single" collapsible class="text-muted-foreground">
+                <AccordionItem value="item-1">
+                    <AccordionTrigger> Nevíš jak získat svůj login kód?</AccordionTrigger>
+                    <AccordionContent>
+                        Joini se na <code
+                            className="px-1 py-0.5 rounded bg-neutral-900 text-neutral-100 font-mono">mc.qpvp.pro</code>,
+                        a napiš do chatu
+                        <code
+                            className="px-1 py-0.5 rounded bg-neutral-900 text-neutral-100 font-mono">/fglogin generate</code>a
+                        ukáže se ti tvůj kód
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
         </form>
     </AuthBase>
 </template>
