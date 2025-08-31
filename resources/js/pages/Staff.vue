@@ -218,10 +218,10 @@ function headRenderUrl(username: string, size = 64) {
                     <div></div>
 
                     <div class="flex items-center justify-center gap-6 text-sm">
-                        <Link :href="route('home')" class="px-1 py-1.5 text-[#EDEDEC] hover:opacity-80">Domů</Link>
-                        <Link :href="route('bany')" class="px-1 py-1.5 text-[#EDEDEC] hover:opacity-80">Bany</Link>
-                        <Link :href="route('staff')" class="px-1 py-1.5 text-red-400 font-medium">Staff</Link>
-                        <Link href="/discord" class="px-1 py-1.5 text-[#EDEDEC] hover:opacity-80">Discord</Link>
+                        <Link href="/" class="px-1 py-1.5 leading-normal text-red-400 hover:opacity-80">Domov</Link>
+                        <Link href="/bany" class="px-1 py-1.5 leading-normal text-[#EDEDEC] font-medium">Bany</Link>
+                        <Link href="/staff" class="px-1 py-1.5 leading-normal text-[#EDEDEC] hover:opacity-80">Staff</Link>
+                        <Link href="/discord" class="px-1 py-1.5 leading-normal text-[#EDEDEC] hover:opacity-80">Discord</Link>
                     </div>
 
                     <div class="flex items-center justify-end gap-4 text-sm">

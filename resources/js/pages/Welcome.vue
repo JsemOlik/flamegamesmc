@@ -73,7 +73,7 @@ onMounted(() => {
 
 <template>
 
-    <Head title="Welcome">
+    <Head title="Ahoj!">
         <link rel="preconnect" href="https://rsms.me/" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
     </Head>
@@ -96,39 +96,31 @@ onMounted(() => {
 
                     <!-- Centered nav links (text only) -->
                     <div class="flex items-center justify-center gap-6 text-sm">
-                        <Link :href="route('home')" class="px-1 py-1.5 leading-normal text-red-400 hover:opacity-80">
-                        Home
-                        </Link>
-                        <Link :href="route('bany')" class="px-1 py-1.5 leading-normal text-[#EDEDEC] font-medium">
-                        Bany
-                        </Link>
-                        <Link :href="route('staff')" class="px-1 py-1.5 leading-normal text-[#EDEDEC] hover:opacity-80">
-                        Staff
-                        </Link>
-                        <Link href="/discord" class="px-1 py-1.5 leading-normal text-[#EDEDEC] hover:opacity-80">
-                        Discord
-                        </Link>
+                        <Link href="/" class="px-1 py-1.5 leading-normal text-red-400 hover:opacity-80">Domov</Link>
+                        <Link href="/bany" class="px-1 py-1.5 leading-normal text-[#EDEDEC] font-medium">Bany</Link>
+                        <Link href="/staff" class="px-1 py-1.5 leading-normal text-[#EDEDEC] hover:opacity-80">Staff</Link>
+                        <Link href="/discord" class="px-1 py-1.5 leading-normal text-[#EDEDEC] hover:opacity-80">Discord</Link>
                     </div>
 
                     <!-- Right-aligned auth buttons (text only) -->
                     <div class="flex items-center justify-end gap-4 text-sm">
-                        <Link v-if="$page.props.auth.user" :href="route('dashboard')"
+                        <Link v-if="$page.props.auth.user" href="/dashboard"
                             class="px-1 py-1.5 leading-normal text-[#EDEDEC] hover:opacity-80 dark:text-[#EDEDEC]">
                         Tickety
                         </Link>
                         <template v-else>
-                            <Link :href="route('login')"
+                            <Link href="/login"
                                 class="px-1 py-1.5 leading-normal text-[#EDEDEC] hover:opacity-80 dark:text-[#EDEDEC]">
                             Přihlásit se
                             </Link>
                             <!--
-          <Link
-            :href="route('register')"
-            class="px-1 py-1.5 leading-normal text-[#EDEDEC] hover:opacity-80 dark:text-[#EDEDEC]"
-          >
-            Register
-          </Link>
-          -->
+                            <Link
+                                :href="route('register')"
+                                class="px-1 py-1.5 leading-normal text-[#EDEDEC] hover:opacity-80 dark:text-[#EDEDEC]"
+                            >
+                                Register
+                            </Link>
+                            -->
                         </template>
                     </div>
                 </nav>
